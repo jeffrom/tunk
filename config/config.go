@@ -3,10 +3,10 @@ package config
 import "github.com/imdario/mergo"
 
 type Config struct {
-	ReleaseScopes  []string `json:"release_scopes,omitempty"`
-	Policies       []string `json:"policies,omitempty"`
-	CustomPolicies []Policy `json:"custom_policies,omitempty"`
-	term           TerminalIO
+	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
+	Policies       []string   `json:"policies,omitempty"`
+	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
+	Term           TerminalIO `json:"-"`
 }
 
 func New(overrides *Config) Config {
@@ -18,7 +18,8 @@ func NewWithTerminalIO(overrides *Config, termio *TerminalIO) Config {
 	if termio == nil {
 		termio = &DefaultTermIO
 	}
-	cfg.term = *termio
+	cfg.Term = *termio
+
 	if overrides != nil {
 		if err := mergo.Merge(&cfg, overrides); err != nil {
 			panic(err)
@@ -29,6 +30,7 @@ func NewWithTerminalIO(overrides *Config, termio *TerminalIO) Config {
 
 func GetDefault() Config {
 	return Config{
+		Policies: []string{"conventional-lax", "lax"},
 		CustomPolicies: []Policy{
 			{
 				Name:                  "conventional-lax",

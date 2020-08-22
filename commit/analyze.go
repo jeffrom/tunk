@@ -2,6 +2,7 @@ package commit
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jeffrom/git-release/config"
 	"github.com/jeffrom/git-release/vcs"
@@ -18,6 +19,11 @@ func NewAnalyzer(cfg config.Config, vcs vcs.Interface) *Analyzer {
 }
 
 func (a *Analyzer) Analyze(ctx context.Context) ([]*Version, error) {
+	commits, err := a.vcs.ReadCommits(ctx, "HEAD")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(len(commits), "commits")
 	return nil, nil
 }
 
