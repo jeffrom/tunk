@@ -27,7 +27,7 @@ func TestAnalyzeNoTags(t *testing.T) {
 func TestAnalyzeNoCommits(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
 	cfg := config.NewWithTerminalIO(nil, &tio)
-	m := vcs.NewMock().SetTags("0.1.0")
+	m := vcs.NewMock().SetTags("v0.1.0")
 	a := NewAnalyzer(cfg, m)
 
 	vers, err := a.Analyze(context.Background(), "")
@@ -88,7 +88,7 @@ func TestAnalyzePatch(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			m := vcs.NewMock().SetTags("0.1.0").SetCommits(tc.commits...)
+			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
 
 			vers, err := a.Analyze(context.Background(), "")
@@ -136,7 +136,7 @@ func TestAnalyzeMinor(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			m := vcs.NewMock().SetTags("0.1.0").SetCommits(tc.commits...)
+			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
 
 			vers, err := a.Analyze(context.Background(), "")
@@ -156,6 +156,67 @@ func TestAnalyzeMinor(t *testing.T) {
 			expectVersion := semver.MustParse("0.2.0")
 			if ver.Version.NE(expectVersion) {
 				t.Errorf("expected version %s, got %s", expectVersion, ver.Version)
+			}
+		})
+	}
+}
+
+func TestAnalyzeRC(t *testing.T) {
+	tio, _, _ := mockTermIO(nil)
+	cfg := config.NewWithTerminalIO(nil, &tio)
+
+	tcs := []struct {
+		name      string
+		tags      []string
+		commits   []*model.Commit
+		expectTag string
+	}{
+		{
+			name:      "patch",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.0"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.1",
+		},
+		{
+			name:      "patch-two",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.0", "v0.1.1-rc.1"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.2",
+		},
+		{
+			name:      "patch-missing",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.1"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.2",
+		},
+		{
+			name:      "patch-nomatch",
+			tags:      []string{"v0.1.0", "v0.1.1-bork.0"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "patch-invalid",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.0-rc.0"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
+			a := NewAnalyzer(cfg, m)
+			ver, err := a.AnalyzeScope(context.Background(), "", "rc")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if ver == nil {
+				t.Fatal("expected version, got none")
+			}
+			expectTag := tc.expectTag
+			if tag := ver.GitTag(); tag != expectTag {
+				t.Errorf("expected tag %q, got %q", expectTag, tag)
 			}
 		})
 	}

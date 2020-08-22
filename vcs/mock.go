@@ -2,6 +2,7 @@ package vcs
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/jeffrom/git-release/model"
@@ -58,9 +59,33 @@ func (m *Mock) DeleteTag(ctx context.Context, commit, tag string) error {
 }
 
 func (m *Mock) ReadTags(ctx context.Context, query string) ([]string, error) {
-	return m.tags, nil
+	var tags []string
+	parts := strings.Split(query, "*")
+	for _, t := range m.tags {
+		if hasAllParts(t, parts) {
+			tags = append(tags, t)
+		}
+	}
+	return tags, nil
 }
 
 func (m *Mock) ReadCommits(ctx context.Context, query string) ([]*model.Commit, error) {
 	return m.commits, nil
+}
+
+func hasAllParts(s string, parts []string) bool {
+	remaining := s
+	for {
+		if len(parts) == 0 {
+			break
+		}
+		part := parts[0]
+		parts = parts[1:]
+
+		if !strings.HasPrefix(remaining, part) {
+			return false
+		}
+		remaining = strings.TrimPrefix(remaining, part)
+	}
+	return true
 }

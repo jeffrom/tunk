@@ -87,14 +87,14 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		return nil, err
 	}
 
-	if rc != "" {
+	if ver != nil && rc != "" {
 		tagPrefix := buildTagPrefix(scope)
 		tagQuery := fmt.Sprintf("%s%s-%s.*", tagPrefix, ver.Version, rc)
 		tags, err := a.vcs.ReadTags(ctx, tagQuery)
 		if err != nil && !errors.Is(err, ErrNoTags) {
 			return nil, err
 		}
-		ver.RC = a.buildLatestRCTag(rc, tags)
+		ver.RC = a.buildLatestRCTag(scope, rc, tags)
 	}
 	return ver, nil
 }
@@ -266,21 +266,18 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAn
 	return annotations, nil
 }
 
-func (a *Analyzer) buildLatestRCTag(rc string, tags []string) string {
+func (a *Analyzer) buildLatestRCTag(scope, rc string, tags []string) string {
+	prefix := buildTagPrefix(scope)
 	var nums []int
 	for _, t := range tags {
-		parts := strings.Split(t, ".")
-		if len(parts) < 2 {
-			a.cfg.Warning("invalid tag, skipping: %q", t)
-			continue
-		}
-		rcCandidatePart := parts[len(parts)-2]
-		if !strings.HasSuffix(rcCandidatePart, "-"+rc) {
-			a.cfg.Warning("invalid tag, skipping: %q", t)
+		trimmed := strings.TrimPrefix(t, prefix)
+		parsed, err := semver.Parse(trimmed)
+		if err != nil || len(parsed.Pre) != 2 || parsed.Pre[0].String() != rc {
+			a.cfg.Warning("invalid tag, skipping: %q (err: %v)", t, err)
 			continue
 		}
 
-		s := parts[len(parts)-1]
+		s := parsed.Pre[1].String()
 		n, err := strconv.ParseInt(s, 10, 16)
 		if err != nil {
 			a.cfg.Warning("invalid tag, skipping: %q, %v", t, err)

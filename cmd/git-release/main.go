@@ -22,6 +22,7 @@ func main() {
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVar(&cfg.Force, "force", false, "force destructive operations")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
+	flags.BoolVar(&cfg.RootOnly, "root", false, "only operate on the root tag")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Only run on a single scope")
 	flags.BoolVar(&cfg.Debug, "debug", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "only print errors")
@@ -50,7 +51,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	cfg.Printf("will tag %d:", len(versions))
 	for _, ver := range versions {
-		cfg.Debugf("will tag: %s:%s", ver.ShortCommit(), ver.GitTag())
+		cfg.Printf("-> %s:%s", ver.ShortCommit(), ver.GitTag())
 	}
 }
