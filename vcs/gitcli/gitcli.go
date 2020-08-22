@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jeffrom/git-release/config"
-	"github.com/jeffrom/git-release/model"
-	"github.com/jeffrom/git-release/vcs"
+	"github.com/jeffrom/trunk-release/config"
+	"github.com/jeffrom/trunk-release/model"
+	"github.com/jeffrom/trunk-release/vcs"
 )
 
 // Git implements vcs.Interface using the git commandline tool.

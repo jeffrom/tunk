@@ -1,3 +1,3 @@
-package gitrelease
+package trunkrelease
 
 var Version = "none"

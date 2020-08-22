@@ -2,7 +2,7 @@ SHELL := /bin/bash
 TMPDIR := $(if $(TMPDIR),$(TMPDIR),"/tmp/")
 GOPATH := $(shell go env GOPATH)
 
-gitrelease_bin := $(GOPATH)/bin/git-release
+bin := $(GOPATH)/bin/trunk-release
 gofiles := $(wildcard *.go **/*.go **/**/*.go **/**/**/*.go)
 
 gocoverutil := $(GOPATH)/bin/gocoverutil
@@ -11,9 +11,9 @@ gomodoutdated := $(GOPATH)/bin/go-mod-outdated
 
 all: build
 
-build: $(gitrelease_bin)
+build: $(bin)
 
-$(gitrelease_bin): $(gofiles)
+$(bin): $(gofiles)
 	GO111MODULE=on go install ./...
 
 .PHONY: clean

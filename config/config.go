@@ -12,7 +12,7 @@ type Config struct {
 	Dryrun         bool       `json:"dryrun,omitempty"`
 	Quiet          bool       `json:"quiet,omitempty"`
 	Force          bool       `json:"force,omitempty"`
-	RootOnly       bool       `json:"root_only,omitempty"`
+	All            bool       `json:"all,omitempty"`
 	Scope          string     `json:"scope,omitempty"`
 	Commit         string     `json:"commit,omitempty"`
 	ReleaseScopes  []string   `json:"release_scopes,omitempty"`

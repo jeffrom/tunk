@@ -3,7 +3,7 @@ package vcs
 import (
 	"context"
 
-	"github.com/jeffrom/git-release/model"
+	"github.com/jeffrom/trunk-release/model"
 )
 
 type Interface interface {

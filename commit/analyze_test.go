@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/blang/semver"
-	"github.com/jeffrom/git-release/config"
-	"github.com/jeffrom/git-release/model"
-	"github.com/jeffrom/git-release/vcs"
+
+	"github.com/jeffrom/trunk-release/config"
+	"github.com/jeffrom/trunk-release/model"
+	"github.com/jeffrom/trunk-release/vcs"
 )
 
 func TestAnalyzeNoTags(t *testing.T) {

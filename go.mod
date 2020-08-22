@@ -1,4 +1,4 @@
-module github.com/jeffrom/git-release
+module github.com/jeffrom/trunk-release
 
 go 1.13
 

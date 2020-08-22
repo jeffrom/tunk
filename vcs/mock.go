@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jeffrom/git-release/model"
+	"github.com/jeffrom/trunk-release/model"
 )
 
 type Mock struct {

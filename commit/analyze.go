@@ -10,9 +10,9 @@ import (
 
 	"github.com/blang/semver"
 
-	"github.com/jeffrom/git-release/config"
-	"github.com/jeffrom/git-release/model"
-	"github.com/jeffrom/git-release/vcs"
+	"github.com/jeffrom/trunk-release/config"
+	"github.com/jeffrom/trunk-release/model"
+	"github.com/jeffrom/trunk-release/vcs"
 )
 
 var ErrNoPolicy = errors.New("commit: no policy matched")
@@ -32,12 +32,34 @@ func NewAnalyzer(cfg config.Config, vcs vcs.Interface) *Analyzer {
 func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 	var versions []*Version
 
-	rootVersion, err := a.AnalyzeScope(ctx, "", rc)
-	if err != nil {
-		return nil, err
+	if a.cfg.Scope == "" {
+		rootVersion, err := a.AnalyzeScope(ctx, "", rc)
+		if err != nil {
+			return nil, err
+		}
+		if rootVersion != nil {
+			versions = append(versions, rootVersion)
+		}
 	}
-	if rootVersion != nil {
-		versions = append(versions, rootVersion)
+
+	if a.cfg.All {
+		for _, scope := range a.cfg.ReleaseScopes {
+			ver, err := a.AnalyzeScope(ctx, scope, rc)
+			if err != nil {
+				return nil, err
+			}
+			if ver != nil {
+				versions = append(versions, ver)
+			}
+		}
+	} else if a.cfg.Scope != "" {
+		ver, err := a.AnalyzeScope(ctx, a.cfg.Scope, rc)
+		if err != nil {
+			return nil, err
+		}
+		if ver != nil {
+			versions = append(versions, ver)
+		}
 	}
 
 	return versions, nil

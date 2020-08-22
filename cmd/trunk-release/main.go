@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/pflag"
 
-	gitrelease "github.com/jeffrom/git-release"
-	"github.com/jeffrom/git-release/commit"
-	"github.com/jeffrom/git-release/config"
-	"github.com/jeffrom/git-release/vcs/gitcli"
+	trunkrelease "github.com/jeffrom/trunk-release"
+	"github.com/jeffrom/trunk-release/commit"
+	"github.com/jeffrom/trunk-release/config"
+	"github.com/jeffrom/trunk-release/vcs/gitcli"
 )
 
 func main() {
@@ -17,13 +17,13 @@ func main() {
 
 	var help bool
 	var version bool
-	flags := pflag.NewFlagSet("git-release", pflag.PanicOnError)
+	flags := pflag.NewFlagSet("trunk-release", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVar(&cfg.Force, "force", false, "force destructive operations")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
-	flags.BoolVar(&cfg.RootOnly, "root", false, "only operate on the root tag")
-	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Only run on a single scope")
+	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
+	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
 	flags.BoolVar(&cfg.Debug, "debug", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "only print errors")
 
@@ -37,7 +37,7 @@ func main() {
 		return
 	}
 	if version {
-		cfg.Printf("%s", gitrelease.Version)
+		cfg.Printf("%s", trunkrelease.Version)
 		return
 	}
 
