@@ -95,7 +95,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	}
 
 	latestVer := latest
-	if rc != "" && rcFound {
+	if rc != "" && rcFound && latestRC.GT(latest) {
 		latestVer = latestRC
 	}
 	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latestVer, scope, ""))
