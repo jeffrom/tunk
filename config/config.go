@@ -8,9 +8,12 @@ import (
 )
 
 type Config struct {
-	Verbose        bool       `json:"verbose,omitempty"`
+	Debug          bool       `json:"debug,omitempty"`
 	Dryrun         bool       `json:"dryrun,omitempty"`
 	Quiet          bool       `json:"quiet,omitempty"`
+	Force          bool       `json:"force,omitempty"`
+	Scope          string     `json:"scope,omitempty"`
+	Commit         string     `json:"commit,omitempty"`
 	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
 	Policies       []string   `json:"policies,omitempty"`
 	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
@@ -38,7 +41,6 @@ func NewWithTerminalIO(overrides *Config, termio *TerminalIO) Config {
 
 func GetDefault() Config {
 	return Config{
-		Verbose:  true,
 		Policies: []string{"conventional-lax", "lax"},
 		CustomPolicies: []Policy{
 			{
@@ -83,10 +85,14 @@ func (c Config) Errorf(msg string, args ...interface{}) {
 }
 
 func (c Config) Debugf(msg string, args ...interface{}) {
-	if !c.Verbose {
+	if !c.Debug {
 		return
 	}
 	c.Printf(msg, args...)
+}
+
+func (c Config) Warning(msg string, args ...interface{}) {
+	c.Errorf("WARNING: "+msg, args...)
 }
 
 func (c Config) GetPolicies() []*Policy {

@@ -16,19 +16,32 @@ type Version struct {
 	RC         string
 }
 
+func (v *Version) ShortCommit() string {
+	if len(v.Commit) >= 8 {
+		return v.Commit[:8]
+	}
+	return v.Commit
+}
+
 func (v *Version) GitTag() string {
+	return buildGitTag(v.Version, v.Scope, v.RC)
+}
+
+func buildGitTag(vArg semver.Version, scope, rc string) string {
+	v := vArg
+	// v.Pre = nil
 	var b strings.Builder
-	if v.Scope != "" {
-		b.WriteString(v.Scope)
+	if scope != "" {
+		b.WriteString(scope)
 		b.WriteString("-")
 	} else {
 		b.WriteString("v")
 	}
-	b.WriteString(v.Version.String())
+	b.WriteString(v.String())
 
-	if v.RC != "" {
+	if rc != "" {
 		b.WriteString("-")
-		b.WriteString(v.RC)
+		b.WriteString(rc)
 	}
 	return b.String()
 }

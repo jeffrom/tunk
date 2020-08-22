@@ -3,6 +3,9 @@ package commit
 import (
 	"context"
 	"errors"
+	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/blang/semver"
@@ -46,30 +49,57 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	if err != nil {
 		return nil, err
 	}
-	latest, err := semverLatest(tags, scope, rc)
+	latest, err := semverLatest(tags, scope, "")
 	if err != nil {
 		if errors.Is(err, ErrNoTags) {
 			initialTag := "v0.1.0"
 			if scope != "" {
 				initialTag = scope + "-0.1.0"
 			}
-			a.cfg.Errorf(`WARNING: no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
+			a.cfg.Warning(`no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
 		}
 		return nil, err
 	}
+	var latestRC semver.Version
+	var rcFound bool
+	if rc != "" {
+		latestRC, err = semverLatest(tags, scope, rc)
+		rcFound = err == nil
+		if err != nil {
+			if !errors.Is(err, ErrNoTags) {
+				return nil, err
+			}
+		}
+	}
 
-	commits, err := a.vcs.ReadCommits(ctx, "HEAD")
+	latestVer := latest
+	if rc != "" && rcFound {
+		latestVer = latestRC
+	}
+	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latestVer, scope, ""))
+	a.cfg.Debugf("log: %q", logQuery)
+	commits, err := a.vcs.ReadCommits(ctx, logQuery)
 	if err != nil {
 		return nil, err
 	}
-	ver, err := a.processCommits(latest, commits, scope, nil)
+	ver, err := a.processCommits(latest, commits, scope, a.cfg.ReleaseScopes)
 	if err != nil {
 		return nil, err
+	}
+
+	if rc != "" {
+		tagPrefix := buildTagPrefix(scope)
+		tagQuery := fmt.Sprintf("%s%s-%s.*", tagPrefix, ver.Version, rc)
+		tags, err := a.vcs.ReadTags(ctx, tagQuery)
+		if err != nil && !errors.Is(err, ErrNoTags) {
+			return nil, err
+		}
+		ver.RC = a.buildLatestRCTag(rc, tags)
 	}
 	return ver, nil
 }
 
-func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit, scope string, allScoped []string) (*Version, error) {
+func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit, scope string, allScopes []string) (*Version, error) {
 	if len(commits) == 0 {
 		return nil, nil
 	}
@@ -82,6 +112,10 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		ac, err := a.processCommit(commit)
 		if err != nil {
 			return nil, err
+		}
+		if !ac.isScoped(scope, allScopes) {
+			a.cfg.Debugf("skipping out of scope commit (scope: %q, commit scope: %q)", scope, ac.scope)
+			continue
 		}
 
 		if maxCommit == nil || ac.releaseType > maxCommit.releaseType {
@@ -232,6 +266,37 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAn
 	return annotations, nil
 }
 
+func (a *Analyzer) buildLatestRCTag(rc string, tags []string) string {
+	var nums []int
+	for _, t := range tags {
+		parts := strings.Split(t, ".")
+		if len(parts) < 2 {
+			a.cfg.Warning("invalid tag, skipping: %q", t)
+			continue
+		}
+		rcCandidatePart := parts[len(parts)-2]
+		if !strings.HasSuffix(rcCandidatePart, "-"+rc) {
+			a.cfg.Warning("invalid tag, skipping: %q", t)
+			continue
+		}
+
+		s := parts[len(parts)-1]
+		n, err := strconv.ParseInt(s, 10, 16)
+		if err != nil {
+			a.cfg.Warning("invalid tag, skipping: %q, %v", t, err)
+			continue
+		}
+		nums = append(nums, int(n))
+	}
+	sort.Ints(nums)
+
+	max := 0
+	if len(nums) > 0 {
+		max = nums[len(nums)-1] + 1
+	}
+	return fmt.Sprintf("%s.%d", rc, max)
+}
+
 func buildTagQuery(scope string) string {
 	if scope == "" {
 		return "v*"
@@ -253,6 +318,18 @@ type analyzedCommit struct {
 	policy      *config.Policy
 	valid       bool
 	annotations []bodyAnnotation
+}
+
+func (ac *analyzedCommit) isScoped(scope string, allScopes []string) bool {
+	if ac.scope == "" {
+		for _, other := range allScopes {
+			if scope == other {
+				return false
+			}
+		}
+		return true
+	}
+	return scope == ac.scope
 }
 
 type bodyAnnotation struct {
