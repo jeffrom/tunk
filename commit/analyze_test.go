@@ -46,6 +46,7 @@ var basicCommits = []*model.Commit{
 	basicPatchCommit,
 }
 
+var conventionalSkipCommit = &model.Commit{ID: "deadbeef", Subject: "chore: cool chore"}
 var conventionalPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix: cool fix"}
 var conventionalMinorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool feature"}
 var conventionalMajorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool feature", Body: "BREAKING CHANGE: nice breakin change"}
@@ -61,6 +62,41 @@ func commitWithID(commit *model.Commit, id string) *model.Commit {
 	c := *commit
 	c.ID = id
 	return &c
+}
+
+func TestAnalyzeSkip(t *testing.T) {
+	tio, _, _ := mockTermIO(nil)
+	cfg := config.NewWithTerminalIO(nil, &tio)
+	tcs := []struct {
+		name    string
+		commits []*model.Commit
+	}{
+		{
+			name:    "conventional",
+			commits: []*model.Commit{conventionalSkipCommit},
+		},
+		{
+			name:    "conventional-multi",
+			commits: []*model.Commit{conventionalSkipCommit, commitWithID(conventionalSkipCommit, "12345678")},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
+			a := NewAnalyzer(cfg, m)
+
+			vers, err := a.Analyze(context.Background(), "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(vers) != 0 {
+				t.Fatalf("expected 0 version, got %d", len(vers))
+			}
+		})
+	}
+
 }
 
 func TestAnalyzePatch(t *testing.T) {

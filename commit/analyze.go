@@ -148,14 +148,15 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		case ReleasePatch:
 			nextVersion.Patch++
 		}
-	}
 
-	v := &Version{
-		Commit:  latestCommit.commit.ID,
-		Version: nextVersion,
-		Scope:   scope,
+		v := &Version{
+			Commit:  latestCommit.commit.ID,
+			Version: nextVersion,
+			Scope:   scope,
+		}
+		return v, nil
 	}
-	return v, nil
+	return nil, nil
 }
 
 func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) {
