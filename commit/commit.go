@@ -28,3 +28,17 @@ func (t ReleaseType) String() string {
 		return "<UNKNOWN>"
 	}
 }
+
+func ReleaseTypeFromString(s string) ReleaseType {
+	switch s {
+	case "SKIP":
+		return ReleaseSkip
+	case "PATCH":
+		return ReleasePatch
+	case "MINOR":
+		return ReleaseMinor
+	case "MAJOR":
+		return ReleaseMajor
+	}
+	panic("unknown release type: " + s)
+}

@@ -12,7 +12,7 @@ import (
 func main() {
 	cfg := config.New(nil)
 	a := commit.NewAnalyzer(cfg, gitcli.New(""))
-	versions, err := a.Analyze(context.Background())
+	versions, err := a.Analyze(context.Background(), "")
 	if err != nil {
 		panic(err)
 	}

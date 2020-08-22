@@ -13,7 +13,7 @@ type Interface interface {
 	ReadCommits(ctx context.Context, query string) ([]*model.Commit, error)
 	CreateTag(ctx context.Context, commit, tag string, opts CommitOpts) error
 	DeleteTag(ctx context.Context, commit, tag string) error
-	QueryTags(ctx context.Context, query string) ([]string, error)
+	ReadTags(ctx context.Context, query string) ([]string, error)
 }
 
 type CommitOpts struct {
