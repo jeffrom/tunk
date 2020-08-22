@@ -48,6 +48,7 @@ var basicCommits = []*model.Commit{
 
 var conventionalPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix: cool fix"}
 var conventionalMinorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool feature"}
+var conventionalMajorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool feature", Body: "BREAKING CHANGE: nice breakin change"}
 
 var conventionalScopedPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix(cool): cool fix"}
 
@@ -156,6 +157,49 @@ func TestAnalyzeMinor(t *testing.T) {
 				}
 			}
 			expectVersion := semver.MustParse("0.2.0")
+			if ver.Version.NE(expectVersion) {
+				t.Errorf("expected version %s, got %s", expectVersion, ver.Version)
+			}
+		})
+	}
+}
+
+func TestAnalyzeMajor(t *testing.T) {
+	tio, _, _ := mockTermIO(nil)
+	cfg := config.NewWithTerminalIO(nil, &tio)
+	tcs := []struct {
+		name         string
+		tags         []string
+		commits      []*model.Commit
+		expectCommit string
+	}{
+		{
+			name:         "conventional",
+			commits:      []*model.Commit{conventionalMajorCommit},
+			expectCommit: "deadbeef",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
+			a := NewAnalyzer(cfg, m)
+
+			vers, err := a.Analyze(context.Background(), "")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(vers) != 1 {
+				t.Fatalf("expected 1 version, got %d", len(vers))
+			}
+			ver := vers[0]
+			if expectCommit := tc.expectCommit; expectCommit != "" {
+				if ver.Commit != expectCommit {
+					t.Errorf("expected commit %q, got %q", expectCommit, ver.Commit)
+				}
+			}
+			expectVersion := semver.MustParse("1.0.0")
 			if ver.Version.NE(expectVersion) {
 				t.Errorf("expected version %s, got %s", expectVersion, ver.Version)
 			}
