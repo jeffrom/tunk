@@ -60,9 +60,9 @@ func (m *Mock) DeleteTag(ctx context.Context, commit, tag string) error {
 
 func (m *Mock) ReadTags(ctx context.Context, query string) ([]string, error) {
 	var tags []string
-	parts := strings.Split(query, "*")
 	for _, t := range m.tags {
-		if hasAllParts(t, parts) {
+		// fmt.Println(query, t, globMatches(t, query))
+		if globMatches(t, query) {
 			tags = append(tags, t)
 		}
 	}
@@ -73,7 +73,8 @@ func (m *Mock) ReadCommits(ctx context.Context, query string) ([]*model.Commit, 
 	return m.commits, nil
 }
 
-func hasAllParts(s string, parts []string) bool {
+func globMatches(s string, glob string) bool {
+	parts := strings.Split(glob, "*")
 	remaining := s
 	for {
 		if len(parts) == 0 {
@@ -87,5 +88,8 @@ func hasAllParts(s string, parts []string) bool {
 		}
 		remaining = strings.TrimPrefix(remaining, part)
 	}
-	return true
+	if len(glob) > 0 && glob[len(glob)-1] == '*' {
+		return true
+	}
+	return remaining == ""
 }

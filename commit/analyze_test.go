@@ -49,6 +49,8 @@ var basicCommits = []*model.Commit{
 var conventionalPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix: cool fix"}
 var conventionalMinorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool feature"}
 
+var conventionalScopedPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix(cool): cool fix"}
+
 var conventionalCommits = []*model.Commit{
 	commitWithID(conventionalPatchCommit, "12345678"),
 	conventionalMinorCommit,
@@ -163,11 +165,12 @@ func TestAnalyzeMinor(t *testing.T) {
 
 func TestAnalyzeRC(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
 
 	tcs := []struct {
 		name      string
 		tags      []string
+		scope     string
+		allScopes []string
 		commits   []*model.Commit
 		expectTag string
 	}{
@@ -197,17 +200,54 @@ func TestAnalyzeRC(t *testing.T) {
 		},
 		{
 			name:      "patch-invalid",
+			tags:      []string{"v0.1.0", "v0.1.1-rc"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "patch-invalid",
 			tags:      []string{"v0.1.0", "v0.1.1-rc.0-rc.0"},
 			commits:   []*model.Commit{conventionalPatchCommit},
 			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "patch-invalid",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.00"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "scope",
+			tags:      []string{"cool-0.1.0"},
+			scope:     "cool",
+			allScopes: []string{"cool"},
+			commits:   []*model.Commit{conventionalScopedPatchCommit},
+			expectTag: "cool-0.1.1-rc.0",
+		},
+		{
+			name:      "scope-root",
+			tags:      []string{"v1.2.3", "cool-0.1.0"},
+			scope:     "cool",
+			allScopes: []string{"cool"},
+			commits:   []*model.Commit{conventionalScopedPatchCommit},
+			expectTag: "cool-0.1.1-rc.0",
+		},
+		{
+			name:      "scope-multi",
+			tags:      []string{"v1.2.3", "cool-0.1.0", "cool-0.1.1-rc.0"},
+			scope:     "cool",
+			allScopes: []string{"cool"},
+			commits:   []*model.Commit{conventionalScopedPatchCommit},
+			expectTag: "cool-0.1.1-rc.1",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			cfg := config.NewWithTerminalIO(&config.Config{ReleaseScopes: tc.allScopes}, &tio)
 			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
-			ver, err := a.AnalyzeScope(context.Background(), "", "rc")
+			ver, err := a.AnalyzeScope(context.Background(), tc.scope, "rc")
 			if err != nil {
 				t.Fatal(err)
 			}

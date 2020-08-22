@@ -113,6 +113,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		if err != nil {
 			return nil, err
 		}
+		// fmt.Println(ac.scope, scope, ac.isScoped(scope, allScopes))
 		if !ac.isScoped(scope, allScopes) {
 			a.cfg.Debugf("skipping out of scope commit (scope: %q, commit scope: %q)", scope, ac.scope)
 			continue
@@ -126,6 +127,10 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		}
 
 		acs = append(acs, ac)
+	}
+
+	if len(acs) == 0 {
+		return nil, nil
 	}
 
 	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.commit.ShortID(), maxCommit.releaseType, maxCommit.scope, latestCommit.commit.ShortID())
@@ -148,6 +153,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	v := &Version{
 		Commit:  latestCommit.commit.ID,
 		Version: nextVersion,
+		Scope:   scope,
 	}
 	return v, nil
 }
@@ -174,7 +180,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 						}
 					}
 				case "scope":
-					ac.scope = group
+					ac.scope = strings.Trim(group, "~!@#$%^&*()_+`-=[]\\{}|';:\",./<>?")
 				}
 			}
 
