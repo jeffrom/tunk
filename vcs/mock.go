@@ -42,7 +42,7 @@ func (m *Mock) Fetch(ctx context.Context, upstream, ref string) error {
 	return nil
 }
 
-func (m *Mock) Push(ctx context.Context, upstream, ref string) error {
+func (m *Mock) Push(ctx context.Context, upstream, ref string, opts PushOpts) error {
 	return nil
 }
 
@@ -50,7 +50,7 @@ func (m *Mock) Commit(ctx context.Context, opts CommitOpts) error {
 	return nil
 }
 
-func (m *Mock) CreateTag(ctx context.Context, commit, tag string, opts CommitOpts) error {
+func (m *Mock) CreateTag(ctx context.Context, commit, tag string, opts TagOpts) error {
 	return nil
 }
 

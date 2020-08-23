@@ -65,6 +65,12 @@ func commitWithID(commit *model.Commit, id string) *model.Commit {
 	return &c
 }
 
+// TODO from tpt-cli: goreleaser-1.0.3 is HEAD (w/ a PATCH), trunk-release is
+// incorrectly searching from goreleaser-1.0.1-rc.0..HEAD because rc is
+// specified ie test that we pick non-rc when there are older rcs and we're in
+// rc mode
+// TODO test that scoped commits aren't skipped unless allScopes len > 0
+
 func TestAnalyzeSkip(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
 	cfg := config.NewWithTerminalIO(nil, &tio)
@@ -80,11 +86,6 @@ func TestAnalyzeSkip(t *testing.T) {
 			name:    "conventional-multi",
 			commits: []*model.Commit{conventionalSkipCommit, commitWithID(conventionalSkipCommit, "12345678")},
 		},
-		// TODO from tpt-cli: goreleaser-1.0.3 is HEAD (w/ a PATCH),
-		// trunk-release is incorrectly searching from
-		// goreleaser-1.0.1-rc.0..HEAD because rc is specified
-		// ie test that we pick non-rc when there are older rcs and we're in rc
-		// mode
 	}
 
 	for _, tc := range tcs {

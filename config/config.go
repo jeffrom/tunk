@@ -8,6 +8,7 @@ import (
 )
 
 type Config struct {
+	InCI           bool       `json:"in_ci,omitempty"`
 	Debug          bool       `json:"debug,omitempty"`
 	Dryrun         bool       `json:"dryrun,omitempty"`
 	Quiet          bool       `json:"quiet,omitempty"`

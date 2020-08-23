@@ -24,6 +24,8 @@ func main() {
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
 	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
+	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
+	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
 	flags.BoolVar(&cfg.Debug, "debug", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "only print errors")
 
@@ -46,7 +48,7 @@ func main() {
 		rc = args[0]
 	}
 
-	a := commit.NewAnalyzer(cfg, gitcli.New(""))
+	a := commit.NewAnalyzer(cfg, gitcli.New(cfg, ""))
 	versions, err := a.Analyze(context.Background(), rc)
 	if err != nil {
 		panic(err)

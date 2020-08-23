@@ -5,7 +5,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/jeffrom/trunk-release/config"
@@ -15,13 +17,14 @@ import (
 
 // Git implements vcs.Interface using the git commandline tool.
 type Git struct {
-	term config.TerminalIO
-	wd   string
+	cfg config.Config
+	wd  string
 }
 
-func New(wd string) *Git {
+func New(cfg config.Config, wd string) *Git {
 	return &Git{
-		wd: wd,
+		cfg: cfg,
+		wd:  wd,
 	}
 }
 
@@ -29,8 +32,26 @@ func (g *Git) Fetch(ctx context.Context, upstream, ref string) error {
 	return nil
 }
 
-func (g *Git) Push(ctx context.Context, upstream, ref string) error {
-	return nil
+func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts) error {
+	if g.cfg.InCI {
+		// check token, creds, setup author etc
+	}
+
+	args := []string{"push"}
+	if opts.FollowTags {
+		args = append(args, "--follow-tags")
+	}
+	if upstream == "" {
+		upstream = "origin"
+	}
+	args = append(args, upstream, ref)
+
+	if g.cfg.Dryrun {
+		g.cfg.Printf("+ git %s (dryrun)", argsString(args))
+		return nil
+	}
+	_, err := g.call(ctx, args)
+	return err
 }
 
 func (g *Git) Commit(ctx context.Context, opts vcs.CommitOpts) error {
@@ -112,8 +133,41 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 	return commits, nil
 }
 
-func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.CommitOpts) error {
-	return nil
+func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpts) error {
+	if opts.Message == "" {
+		return errors.New("gitcli: message is required")
+	}
+	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
+		g.cfg.Printf("CI: setting author, author email")
+		opts.Author = "trunk-release"
+		opts.AuthorEmail = "cool+release@example.com"
+	}
+	if g.cfg.InCI {
+		if opts.Author != "" || opts.AuthorEmail != "" {
+			if err := g.setAuthor(ctx, opts.Author, opts.AuthorEmail); err != nil {
+				return err
+			}
+		}
+		ghToken := os.Getenv("GITHUB_TOKEN")
+		if ghToken == "" {
+			return errors.New("gitcli tag: GITHUB_TOKEN is required in CI")
+		}
+	}
+
+	args := []string{
+		"tag", "-a", tag,
+	}
+	if opts.Commit != "" {
+		args = append(args, opts.Commit)
+	}
+	args = append(args, "-m", opts.Message)
+
+	if g.cfg.Dryrun {
+		g.cfg.Printf("+ git %s (dryrun)", argsString(args))
+		return nil
+	}
+	_, err := g.call(ctx, args)
+	return err
 }
 
 func (g *Git) DeleteTag(ctx context.Context, commit, tag string) error {
@@ -138,4 +192,50 @@ func (g *Git) ReadTags(ctx context.Context, query string) ([]string, error) {
 		tags = append(tags, s)
 	}
 	return tags, nil
+}
+
+func (g *Git) setAuthor(ctx context.Context, author, email string) error {
+	userArgs := []string{"config", "user.name", author}
+	emailArgs := []string{"config", "user.email", email}
+	if g.cfg.Dryrun {
+		g.cfg.Printf("+ git %s (dryrun)", argsString(userArgs))
+		g.cfg.Printf("+ git %s (dryrun)", argsString(emailArgs))
+		return nil
+	}
+	if _, err := g.call(ctx, userArgs); err != nil {
+		return err
+	}
+	if _, err := g.call(ctx, emailArgs); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, user, token string) error {
+	printSuffix := ""
+	if g.cfg.Dryrun {
+		printSuffix = " (dryrun)"
+	}
+	scrubbedURL := fmt.Sprintf("https://%s:xxxxxx@github.com/%s/%s.git", user, repoName, remoteName)
+	url := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", user, token, repoName, remoteName)
+	b, err := g.call(ctx, []string{"remote", "get-url", upstream})
+	currURL := strings.TrimSuffix(string(b), "\n")
+	if err != nil {
+		args := []string{"remote", "add", upstream}
+		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+		if g.cfg.Dryrun {
+			return nil
+		}
+		_, aerr := g.call(ctx, append(args, url))
+		return aerr
+	} else if currURL != url {
+		args := []string{"remote", "set-url", upstream}
+		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+		if g.cfg.Dryrun {
+			return nil
+		}
+		_, serr := g.call(ctx, append(args, url))
+		return serr
+	}
+	return nil
 }

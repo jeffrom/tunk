@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 var CommandContext = exec.CommandContext
@@ -23,4 +24,25 @@ func (g *Git) call(ctx context.Context, args []string) ([]byte, error) {
 		return nil, fmt.Errorf("exec: git %q failed: %s (%w)", args, eb.String(), err)
 	}
 	return ob.Bytes(), err
+}
+
+// argsString returns a string suitable for copy/paste into the terminal.
+func argsString(args []string) string {
+	b := &bytes.Buffer{}
+
+	for i, arg := range args {
+		if strings.Contains(arg, " ") {
+			b.WriteString(`"`)
+			b.WriteString(arg)
+			b.WriteString(`"`)
+		} else {
+			b.WriteString(arg)
+		}
+
+		if i < len(args)-1 {
+			b.WriteString(" ")
+		}
+	}
+
+	return b.String()
 }

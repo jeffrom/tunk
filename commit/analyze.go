@@ -355,7 +355,10 @@ func (ac *analyzedCommit) isScoped(scope string, allScopes []string) bool {
 		}
 		return true
 	}
-	return scope == ac.scope
+	if len(allScopes) > 0 {
+		return scope == ac.scope
+	}
+	return true
 }
 
 type bodyAnnotation struct {
