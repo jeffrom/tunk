@@ -8,9 +8,9 @@ import (
 
 	"github.com/blang/semver"
 
-	"github.com/jeffrom/trunk-release/config"
-	"github.com/jeffrom/trunk-release/model"
-	"github.com/jeffrom/trunk-release/vcs"
+	"github.com/jeffrom/tunk/config"
+	"github.com/jeffrom/tunk/model"
+	"github.com/jeffrom/tunk/vcs"
 )
 
 func TestAnalyzeNoTags(t *testing.T) {
@@ -65,7 +65,7 @@ func commitWithID(commit *model.Commit, id string) *model.Commit {
 	return &c
 }
 
-// TODO from tpt-cli: goreleaser-1.0.3 is HEAD (w/ a PATCH), trunk-release is
+// TODO from tpt-cli: goreleaser-1.0.3 is HEAD (w/ a PATCH), tunk is
 // incorrectly searching from goreleaser-1.0.1-rc.0..HEAD because rc is
 // specified ie test that we pick non-rc when there are older rcs and we're in
 // rc mode

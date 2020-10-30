@@ -2,7 +2,7 @@ SHELL := /bin/bash
 TMPDIR := $(if $(TMPDIR),$(TMPDIR),"/tmp/")
 GOPATH := $(shell go env GOPATH)
 
-bin := $(GOPATH)/bin/trunk-release
+bin := $(GOPATH)/bin/tunk
 gofiles := $(wildcard *.go **/*.go **/**/*.go **/**/**/*.go)
 
 gocoverutil := $(GOPATH)/bin/gocoverutil

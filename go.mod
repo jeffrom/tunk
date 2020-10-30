@@ -1,6 +1,6 @@
-module github.com/jeffrom/trunk-release
+module github.com/jeffrom/tunk
 
-go 1.13
+go 1.15
 
 require (
 	github.com/blang/semver v3.5.1+incompatible

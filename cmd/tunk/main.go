@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/pflag"
 
-	trunkrelease "github.com/jeffrom/trunk-release"
-	"github.com/jeffrom/trunk-release/commit"
-	"github.com/jeffrom/trunk-release/config"
-	"github.com/jeffrom/trunk-release/vcs/gitcli"
+	trunkrelease "github.com/jeffrom/tunk"
+	"github.com/jeffrom/tunk/commit"
+	"github.com/jeffrom/tunk/config"
+	"github.com/jeffrom/tunk/vcs/gitcli"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 
 	var help bool
 	var version bool
-	flags := pflag.NewFlagSet("trunk-release", pflag.PanicOnError)
+	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVar(&cfg.Force, "force", false, "force destructive operations")

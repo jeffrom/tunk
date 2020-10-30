@@ -10,9 +10,9 @@ import (
 
 	"github.com/blang/semver"
 
-	"github.com/jeffrom/trunk-release/config"
-	"github.com/jeffrom/trunk-release/model"
-	"github.com/jeffrom/trunk-release/vcs"
+	"github.com/jeffrom/tunk/config"
+	"github.com/jeffrom/tunk/model"
+	"github.com/jeffrom/tunk/vcs"
 )
 
 var ErrNoPolicy = errors.New("commit: no policy matched")

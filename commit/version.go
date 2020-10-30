@@ -5,7 +5,7 @@ import (
 
 	"github.com/blang/semver"
 
-	"github.com/jeffrom/trunk-release/model"
+	"github.com/jeffrom/tunk/model"
 )
 
 type Version struct {

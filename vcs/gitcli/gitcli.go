@@ -10,9 +10,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jeffrom/trunk-release/config"
-	"github.com/jeffrom/trunk-release/model"
-	"github.com/jeffrom/trunk-release/vcs"
+	"github.com/jeffrom/tunk/config"
+	"github.com/jeffrom/tunk/model"
+	"github.com/jeffrom/tunk/vcs"
 )
 
 // Git implements vcs.Interface using the git commandline tool.
@@ -139,7 +139,7 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 	}
 	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
 		g.cfg.Printf("CI: setting author, author email")
-		opts.Author = "trunk-release"
+		opts.Author = "tunk"
 		opts.AuthorEmail = "cool+release@example.com"
 	}
 	if g.cfg.InCI {
