@@ -14,6 +14,9 @@ type Interface interface {
 	CreateTag(ctx context.Context, commit, tag string, opts TagOpts) error
 	DeleteTag(ctx context.Context, commit, tag string) error
 	ReadTags(ctx context.Context, query string) ([]string, error)
+	GetMainBranch(ctx context.Context, candidates []string) (string, error)
+	BranchContains(ctx context.Context, commit, branch string) (bool, error)
+	CurrentCommit(ctx context.Context) (string, error)
 }
 
 type CommitOpts struct {

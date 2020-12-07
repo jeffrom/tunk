@@ -32,6 +32,38 @@ func (g *Git) Fetch(ctx context.Context, upstream, ref string) error {
 	return nil
 }
 
+func (g *Git) GetMainBranch(ctx context.Context, candidates []string) (string, error) {
+	args := []string{"branch", "--list"}
+	for _, cand := range candidates {
+		b, err := g.call(ctx, append(args, cand))
+		if err != nil {
+			return "", err
+		}
+		match, err := checkListBranchOutput(b, cand)
+		if err != nil {
+			return "", err
+		}
+		if match {
+			return cand, nil
+		}
+	}
+	return "", fmt.Errorf("no matching release branch of candidates: %q", candidates)
+}
+
+func (g *Git) CurrentCommit(ctx context.Context) (string, error) {
+	args := []string{"rev-parse", "HEAD"}
+	b, err := g.call(ctx, args)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(string(b)), nil
+}
+
+func (g *Git) BranchContains(ctx context.Context, commit, branch string) (bool, error) {
+	return false, nil
+}
+
 func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts) error {
 	if g.cfg.InCI {
 		// check token, creds, setup author etc
@@ -238,4 +270,18 @@ func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, u
 		return serr
 	}
 	return nil
+}
+
+func checkListBranchOutput(out []byte, candidate string) (bool, error) {
+	s := bufio.NewScanner(bytes.NewReader(out))
+	for s.Scan() {
+		line := strings.TrimSpace(s.Text())
+		if line == candidate {
+			return true, nil
+		}
+	}
+	if err := s.Err(); err != nil {
+		return false, err
+	}
+	return false, nil
 }

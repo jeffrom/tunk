@@ -20,6 +20,9 @@ type Config struct {
 	Policies       []string   `json:"policies,omitempty"`
 	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
 	Term           TerminalIO `json:"-"`
+
+	// IgnorePolicies ignores policy restrictions. Intended for testing only.
+	IgnorePolicies bool `json:"-"`
 }
 
 func New(overrides *Config) Config {
@@ -108,7 +111,7 @@ func (c Config) GetPolicies() []*Policy {
 	return pols
 }
 
-func (c Config) GetBranches(policy *Policy) []string { return c.Branches }
+func (c Config) GetBranches() []string { return c.Branches }
 
 func oneOf(s string, l []string) bool {
 	for _, cand := range l {

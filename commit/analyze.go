@@ -32,6 +32,20 @@ func NewAnalyzer(cfg config.Config, vcs vcs.Interface) *Analyzer {
 func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 	var versions []*Version
 
+	// TODO in CI, fetch the main branch. locally, don't fetch.
+
+	mainBranch, err := a.vcs.GetMainBranch(ctx, a.cfg.GetBranches())
+	if err != nil {
+		return nil, err
+	}
+	a.cfg.Debugf("main branch is: %q", mainBranch)
+
+	if !a.cfg.IgnorePolicies {
+		if err := a.checkPolicies(ctx, mainBranch); err != nil {
+			return nil, err
+		}
+	}
+
 	if a.cfg.Scope == "" {
 		rootVersion, err := a.AnalyzeScope(ctx, "", rc)
 		if err != nil {
@@ -122,6 +136,27 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		ver.RC = a.buildLatestRCTag(scope, rc, tags)
 	}
 	return ver, nil
+}
+
+func (a *Analyzer) checkPolicies(ctx context.Context, mainBranch string) error {
+	// in local env, make sure the current commit is on one of the allowed branches
+	if a.cfg.InCI {
+		// XXX
+	}
+
+	currCommit, err := a.vcs.CurrentCommit(ctx)
+	if err != nil {
+		return err
+	}
+
+	ok, err := a.vcs.BranchContains(ctx, currCommit, mainBranch)
+	if err != nil {
+		return err
+	}
+	if !ok && !a.cfg.Dryrun {
+		return fmt.Errorf("Current commit is not on the main branch %q", mainBranch)
+	}
+	return nil
 }
 
 func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit, scope string, allScopes []string) (*Version, error) {

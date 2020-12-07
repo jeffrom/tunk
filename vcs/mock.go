@@ -73,6 +73,18 @@ func (m *Mock) ReadCommits(ctx context.Context, query string) ([]*model.Commit, 
 	return m.commits, nil
 }
 
+func (m *Mock) BranchContains(ctx context.Context, commit, branch string) (bool, error) {
+	return true, nil
+}
+
+func (m *Mock) CurrentCommit(ctx context.Context) (string, error) {
+	return "deadbeef", nil
+}
+
+func (m *Mock) GetMainBranch(ctx context.Context, candidates []string) (string, error) {
+	return "main", nil
+}
+
 func globMatches(s string, glob string) bool {
 	parts := strings.Split(glob, "*")
 	remaining := s

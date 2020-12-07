@@ -15,7 +15,7 @@ import (
 
 func TestAnalyzeNoTags(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := newTestConfig(nil, &tio)
 	m := vcs.NewMock()
 	a := NewAnalyzer(cfg, m)
 
@@ -27,7 +27,7 @@ func TestAnalyzeNoTags(t *testing.T) {
 
 func TestAnalyzeNoCommits(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := newTestConfig(nil, &tio)
 	m := vcs.NewMock().SetTags("v0.1.0")
 	a := NewAnalyzer(cfg, m)
 
@@ -69,7 +69,7 @@ func commitWithID(commit *model.Commit, id string) *model.Commit {
 
 func TestAnalyzeSkip(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(&config.Config{InCI: true}, &tio)
+	cfg := newTestConfig(&config.Config{InCI: true}, &tio)
 	tcs := []struct {
 		name    string
 		commits []*model.Commit
@@ -104,7 +104,7 @@ func TestAnalyzeSkip(t *testing.T) {
 
 func TestAnalyzePatch(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := newTestConfig(nil, &tio)
 	tcs := []struct {
 		name         string
 		tags         []string
@@ -157,7 +157,7 @@ func TestAnalyzePatch(t *testing.T) {
 
 func TestAnalyzeMinor(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := newTestConfig(nil, &tio)
 	tcs := []struct {
 		name         string
 		tags         []string
@@ -225,7 +225,7 @@ func TestAnalyzeMinor(t *testing.T) {
 
 func TestAnalyzeMajor(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := newTestConfig(nil, &tio)
 	tcs := []struct {
 		name         string
 		tags         []string
@@ -348,7 +348,7 @@ func TestAnalyzeRC(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			cfg := config.NewWithTerminalIO(&config.Config{ReleaseScopes: tc.allScopes}, &tio)
+			cfg := newTestConfig(&config.Config{ReleaseScopes: tc.allScopes}, &tio)
 			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
 			ver, err := a.AnalyzeScope(context.Background(), tc.scope, "rc")
@@ -371,4 +371,10 @@ func mockTermIO(stdin io.Reader) (config.TerminalIO, *bytes.Buffer, *bytes.Buffe
 	eb := &bytes.Buffer{}
 	tio := config.TerminalIO{Stdin: stdin, Stdout: ob, Stderr: eb}
 	return tio, ob, eb
+}
+
+func newTestConfig(overrides *config.Config, tio *config.TerminalIO) config.Config {
+	cfg := config.NewWithTerminalIO(overrides, tio)
+	cfg.IgnorePolicies = true
+	return cfg
 }
