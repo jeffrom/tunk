@@ -3,3 +3,4 @@ package release
 
 var Version = "none"
 var Commit = "none"
+var Date = "none"
