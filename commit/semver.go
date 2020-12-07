@@ -15,8 +15,8 @@ func semverLatest(tags []string, scope, prerelease string) (semver.Version, erro
 		// orig := t
 		if strings.HasPrefix(t, "v") {
 			t = t[1:]
-		} else if scope != "" && strings.HasPrefix(t, scope+"-") {
-			parts := strings.SplitN(t, "-", 2)
+		} else if scope != "" && strings.HasPrefix(t, scope+"/") {
+			parts := strings.SplitN(t, "/", 2)
 			t = parts[1]
 		}
 

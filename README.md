@@ -8,7 +8,7 @@ There are several similar (and great) tools that serve a similar purpose, such a
 
 There is also [intuit/auto](https://github.com/intuit/auto). The main difference with tunk is reduced feature set. tunk does little more than read commits and push tags.
 
-Because tunk is small, it's easy to combine with other release tools, for example adding a canary release to a semantic-release CD pipeline is relatively simple.
+Because tunk has a small scope, it's easy to combine with other release tools, for example adding a canary release to a semantic-release CD pipeline is relatively simple.
 
 ## install
 

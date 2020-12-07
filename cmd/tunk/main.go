@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/pflag"
 
 	trunkrelease "github.com/jeffrom/tunk"
@@ -20,14 +22,14 @@ func main() {
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
-	flags.BoolVar(&cfg.Force, "force", false, "force destructive operations")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
 	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
+	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
 	flags.BoolVar(&cfg.Debug, "debug", false, "print additional debugging info")
-	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "only print errors")
+	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 
 	if err := flags.Parse(os.Args); err != nil {
 		panic(err)
@@ -51,10 +53,27 @@ func main() {
 	a := commit.NewAnalyzer(cfg, gitcli.New(cfg, ""))
 	versions, err := a.Analyze(context.Background(), rc)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
-	cfg.Printf("will tag %d:", len(versions))
+	cfg.Debugf("will tag %d:", len(versions))
+
+	stdoutfd := os.Stdout.Fd()
+	istty := isatty.IsTerminal(stdoutfd)
 	for _, ver := range versions {
-		cfg.Printf("-> %s:%s", ver.ShortCommit(), ver.GitTag())
+		if cfg.Quiet {
+			tag := ver.GitTag()
+			if istty {
+				fmt.Println(tag)
+			} else {
+				fmt.Print(tag)
+			}
+		} else {
+			cfg.Printf("-> %s:%s", ver.ShortCommit(), ver.GitTag())
+		}
+	}
+
+	if cfg.Dryrun {
+		return
 	}
 }

@@ -12,10 +12,10 @@ type Config struct {
 	Debug          bool       `json:"debug,omitempty"`
 	Dryrun         bool       `json:"dryrun,omitempty"`
 	Quiet          bool       `json:"quiet,omitempty"`
-	Force          bool       `json:"force,omitempty"`
 	All            bool       `json:"all,omitempty"`
 	Scope          string     `json:"scope,omitempty"`
 	Commit         string     `json:"commit,omitempty"`
+	Branches       []string   `json:"branches,omitempty"`
 	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
 	Policies       []string   `json:"policies,omitempty"`
 	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
@@ -44,6 +44,7 @@ func NewWithTerminalIO(overrides *Config, termio *TerminalIO) Config {
 func GetDefault() Config {
 	return Config{
 		Policies: []string{"conventional-lax", "lax"},
+		Branches: []string{"main", "master"},
 		CustomPolicies: []Policy{
 			{
 				Name:                  "conventional-lax",
@@ -107,6 +108,13 @@ func (c Config) GetPolicies() []*Policy {
 		pols = append(pols, &p)
 	}
 	return pols
+}
+
+func (c Config) GetBranches(policy *Policy) []string {
+	if len(policy.Branches) > 0 {
+		return policy.Branches
+	}
+	return c.Branches
 }
 
 func oneOf(s string, l []string) bool {

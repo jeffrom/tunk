@@ -31,13 +31,9 @@ func TestAnalyzeNoCommits(t *testing.T) {
 	m := vcs.NewMock().SetTags("v0.1.0")
 	a := NewAnalyzer(cfg, m)
 
-	vers, err := a.Analyze(context.Background(), "")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(vers) != 0 {
-		t.Fatalf("expected 0 versions, got %d", len(vers))
+	_, err := a.Analyze(context.Background(), "")
+	if err == nil {
+		t.Fatal("expected no release commits error")
 	}
 }
 
@@ -73,7 +69,7 @@ func commitWithID(commit *model.Commit, id string) *model.Commit {
 
 func TestAnalyzeSkip(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
-	cfg := config.NewWithTerminalIO(nil, &tio)
+	cfg := config.NewWithTerminalIO(&config.Config{InCI: true}, &tio)
 	tcs := []struct {
 		name    string
 		commits []*model.Commit
@@ -170,19 +166,39 @@ func TestAnalyzeMinor(t *testing.T) {
 	}{
 		{
 			name:         "conventional",
+			tags:         []string{"v0.1.0"},
 			commits:      []*model.Commit{conventionalMinorCommit},
 			expectCommit: "deadbeef",
 		},
 		{
 			name:         "basic+conventional",
+			tags:         []string{"v0.1.0"},
 			commits:      []*model.Commit{commitWithID(basicPatchCommit, "12345678"), conventionalMinorCommit},
 			expectCommit: "12345678",
+		},
+		{
+			name:         "conventional+rc",
+			tags:         []string{"v0.1.0", "v0.2.0-rc.0"},
+			commits:      []*model.Commit{conventionalMinorCommit},
+			expectCommit: "deadbeef",
+		},
+		{
+			name:         "conventional+rc2",
+			tags:         []string{"v0.1.0", "v0.2.1-rc.0", "v0.2.0-rc.0"},
+			commits:      []*model.Commit{conventionalMinorCommit},
+			expectCommit: "deadbeef",
+		},
+		{
+			name:         "conventional+rc3",
+			tags:         []string{"v0.1.0", "v1.0.0-rc.0", "v0.2.0-rc.0"},
+			commits:      []*model.Commit{conventionalMinorCommit},
+			expectCommit: "deadbeef",
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
+			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
 
 			vers, err := a.Analyze(context.Background(), "")
@@ -218,6 +234,7 @@ func TestAnalyzeMajor(t *testing.T) {
 	}{
 		{
 			name:         "conventional",
+			tags:         []string{"v0.1.0"},
 			commits:      []*model.Commit{conventionalMajorCommit},
 			expectCommit: "deadbeef",
 		},
@@ -225,7 +242,7 @@ func TestAnalyzeMajor(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
+			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
 			a := NewAnalyzer(cfg, m)
 
 			vers, err := a.Analyze(context.Background(), "")
@@ -305,27 +322,27 @@ func TestAnalyzeRC(t *testing.T) {
 		},
 		{
 			name:      "scope",
-			tags:      []string{"cool-0.1.0"},
+			tags:      []string{"cool/0.1.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool-0.1.1-rc.0",
+			expectTag: "cool/0.1.1-rc.0",
 		},
 		{
 			name:      "scope-root",
-			tags:      []string{"v1.2.3", "cool-0.1.0"},
+			tags:      []string{"v1.2.3", "cool/0.1.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool-0.1.1-rc.0",
+			expectTag: "cool/0.1.1-rc.0",
 		},
 		{
 			name:      "scope-multi",
-			tags:      []string{"v1.2.3", "cool-0.1.0", "cool-0.1.1-rc.0"},
+			tags:      []string{"v1.2.3", "cool/0.1.0", "cool/0.1.1-rc.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool-0.1.1-rc.1",
+			expectTag: "cool/0.1.1-rc.1",
 		},
 	}
 

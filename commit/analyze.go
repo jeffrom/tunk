@@ -62,6 +62,9 @@ func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 		}
 	}
 
+	if len(versions) == 0 && !a.cfg.InCI {
+		return versions, errors.New("No releaseable commits have been created since the last release was tagged.")
+	}
 	return versions, nil
 }
 
@@ -76,7 +79,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		if errors.Is(err, ErrNoTags) {
 			initialTag := "v0.1.0"
 			if scope != "" {
-				initialTag = scope + "-0.1.0"
+				initialTag = scope + "/0.1.0"
 			}
 			a.cfg.Warning(`no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
 		}
@@ -130,7 +133,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	var maxCommit *analyzedCommit
 	var latestCommit *analyzedCommit
 	for _, commit := range commits {
-		a.cfg.Debugf("%s (%s): %s", commit.ID[:8], commit.Author, commit.Subject)
+		a.cfg.Debugf("%s (%s) -> %s", commit.ID[:8], commit.Author, commit.Subject)
 		ac, err := a.processCommit(commit)
 		if err != nil {
 			return nil, err
@@ -158,7 +161,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.commit.ShortID(), maxCommit.releaseType, maxCommit.scope, latestCommit.commit.ShortID())
 	nextVersion := latest
 	if maxCommit.releaseType >= ReleasePatch {
-		a.cfg.Printf("will bump %s version", maxCommit.releaseType)
+		a.cfg.Debugf("will bump %s version", maxCommit.releaseType)
 		switch maxCommit.releaseType {
 		case ReleaseMajor:
 			nextVersion.Major++
@@ -327,14 +330,14 @@ func buildTagQuery(scope string) string {
 	if scope == "" {
 		return "v*"
 	}
-	return scope + "-*"
+	return scope + "/*"
 }
 
 func buildTagPrefix(scope string) string {
 	if scope == "" {
 		return "v"
 	}
-	return scope + "-"
+	return scope + "/"
 }
 
 type analyzedCommit struct {
