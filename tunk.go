@@ -1,3 +1,1 @@
-package trunkrelease
-
-var Version = "none"
+package tunk

@@ -27,7 +27,6 @@ type CommitOpts struct {
 
 type TagOpts struct {
 	Message     string
-	Commit      string
 	Author      string
 	AuthorEmail string
 }

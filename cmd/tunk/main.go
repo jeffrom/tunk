@@ -8,9 +8,9 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/pflag"
 
-	trunkrelease "github.com/jeffrom/tunk"
-	"github.com/jeffrom/tunk/commit"
 	"github.com/jeffrom/tunk/config"
+	"github.com/jeffrom/tunk/release"
+	"github.com/jeffrom/tunk/runner"
 	"github.com/jeffrom/tunk/vcs/gitcli"
 )
 
@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 	if version {
-		cfg.Printf("%s", trunkrelease.Version)
+		cfg.Printf("%s", release.Version)
 		return
 	}
 
@@ -50,8 +50,9 @@ func main() {
 		rc = args[0]
 	}
 
-	a := commit.NewAnalyzer(cfg, gitcli.New(cfg, ""))
-	versions, err := a.Analyze(context.Background(), rc)
+	runner := runner.New(cfg, gitcli.New(cfg, ""))
+	ctx := context.Background()
+	versions, err := runner.Analyze(ctx, rc)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -73,7 +74,8 @@ func main() {
 		}
 	}
 
-	if cfg.Dryrun {
-		return
+	if err := runner.CreateTags(ctx, versions); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }

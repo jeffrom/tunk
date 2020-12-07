@@ -172,7 +172,7 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 
 func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpts) error {
 	if opts.Message == "" {
-		return errors.New("gitcli: message is required")
+		opts.Message = fmt.Sprintf("%s", tag)
 	}
 	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
 		g.cfg.Printf("CI: setting author, author email")
@@ -194,8 +194,8 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 	args := []string{
 		"tag", "-a", tag,
 	}
-	if opts.Commit != "" {
-		args = append(args, opts.Commit)
+	if commit != "" {
+		args = append(args, commit)
 	}
 	args = append(args, "-m", opts.Message)
 
