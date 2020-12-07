@@ -48,7 +48,6 @@ func GetDefault() Config {
 		CustomPolicies: []Policy{
 			{
 				Name:                  "conventional-lax",
-				Branches:              []string{"master"},
 				SubjectRE:             `^(?P<type>[A-Za-z0-9]+)(?P<scope>\([^\)]+\))?!?:\s+(?P<body>.+)$`,
 				BodyAnnotationStartRE: `^(?P<type>[A-Z ]+): `,
 				BreakingChangeTypes:   []string{"BREAKING CHANGE"},
@@ -68,7 +67,6 @@ func GetDefault() Config {
 			},
 			{
 				Name:                "lax",
-				Branches:            []string{"master"},
 				SubjectRE:           `^(?P<scope>[A-Za-z0-9_-]+): `,
 				FallbackReleaseType: "PATCH",
 			},
@@ -110,12 +108,7 @@ func (c Config) GetPolicies() []*Policy {
 	return pols
 }
 
-func (c Config) GetBranches(policy *Policy) []string {
-	if len(policy.Branches) > 0 {
-		return policy.Branches
-	}
-	return c.Branches
-}
+func (c Config) GetBranches(policy *Policy) []string { return c.Branches }
 
 func oneOf(s string, l []string) bool {
 	for _, cand := range l {
@@ -128,7 +121,6 @@ func oneOf(s string, l []string) bool {
 
 type Policy struct {
 	Name                  string            `json:"name"`
-	Branches              []string          `json:"branches"`
 	SubjectRE             string            `json:"subject_regex"`
 	BodyAnnotationStartRE string            `json:"body_annotation_start_regex"`
 	BreakingChangeTypes   []string          `json:"breaking_change_types"`

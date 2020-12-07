@@ -28,7 +28,7 @@ func main() {
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
-	flags.BoolVar(&cfg.Debug, "debug", false, "print additional debugging info")
+	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 
 	if err := flags.Parse(os.Args); err != nil {
