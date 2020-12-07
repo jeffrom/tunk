@@ -227,6 +227,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 			subjectMatch = subjectRE.FindStringSubmatch(commit.Subject)
 		}
 
+		typeMatch := false
 		if len(subjectMatch) > 0 {
 			ac := &analyzedCommit{commit: commit, policy: pol, valid: true}
 			for i, subexp := range subjectRE.SubexpNames() {
@@ -238,6 +239,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 						rt, ok := pol.CommitTypes[commitType]
 						if ok {
 							ac.releaseType = ReleaseTypeFromString(rt)
+							typeMatch = true
 						}
 					}
 				case "scope":
@@ -245,17 +247,21 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 				}
 			}
 
-			breaking, err := a.detectBreakingChange(pol, ac)
-			if err != nil {
-				return nil, err
-			}
-			if breaking {
-				ac.releaseType = ReleaseMajor
-			}
+			if typeMatch {
+				breaking, err := a.detectBreakingChange(pol, ac)
+				if err != nil {
+					return nil, err
+				}
+				if breaking {
+					ac.releaseType = ReleaseMajor
+				}
 
-			a.cfg.Debugf("policy match: %q (%s)", pol.Name, ac.releaseType)
-			return ac, nil
-		} else if pol.FallbackReleaseType != "" {
+				a.cfg.Debugf("policy match: %q (%s)", pol.Name, ac.releaseType)
+				return ac, nil
+			}
+		}
+
+		if !typeMatch && pol.FallbackReleaseType != "" {
 			ac := &analyzedCommit{commit: commit, policy: pol, valid: false, releaseType: ReleaseTypeFromString(pol.FallbackReleaseType)}
 			a.cfg.Debugf("policy fallback: %q (%s)", pol.Name, ac.releaseType)
 			return ac, nil
