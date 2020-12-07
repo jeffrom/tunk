@@ -25,7 +25,7 @@ func main() {
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
 	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
-	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"master"}, "set release branches")
+	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")

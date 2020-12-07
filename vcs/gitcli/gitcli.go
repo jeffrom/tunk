@@ -61,7 +61,12 @@ func (g *Git) CurrentCommit(ctx context.Context) (string, error) {
 }
 
 func (g *Git) BranchContains(ctx context.Context, commit, branch string) (bool, error) {
-	return false, nil
+	args := []string{"branch", "--contains", commit, "--list", branch}
+	b, err := g.call(ctx, args)
+	if err != nil {
+		return false, err
+	}
+	return checkListBranchOutput(b, branch)
 }
 
 func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts) error {
@@ -275,7 +280,7 @@ func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, u
 func checkListBranchOutput(out []byte, candidate string) (bool, error) {
 	s := bufio.NewScanner(bytes.NewReader(out))
 	for s.Scan() {
-		line := strings.TrimSpace(s.Text())
+		line := strings.Trim(s.Text(), " \t*")
 		if line == candidate {
 			return true, nil
 		}

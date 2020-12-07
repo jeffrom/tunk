@@ -154,7 +154,7 @@ func (a *Analyzer) checkPolicies(ctx context.Context, mainBranch string) error {
 		return err
 	}
 	if !ok && !a.cfg.Dryrun {
-		return fmt.Errorf("Current commit is not on the main branch %q", mainBranch)
+		return fmt.Errorf("Current commit %s is not on the main branch %q", currCommit[:8], mainBranch)
 	}
 	return nil
 }
