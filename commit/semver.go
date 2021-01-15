@@ -2,6 +2,7 @@ package commit
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/blang/semver"
@@ -20,9 +21,9 @@ func semverLatest(tags []string, scope, prerelease string) (semver.Version, erro
 			t = parts[1]
 		}
 
-		v, err := semver.Parse(t)
+		v, err := semver.ParseTolerant(t)
 		if err != nil {
-			// cfg.Warning("invalid tag, skipping: %s", orig)
+			fmt.Printf("invalid tag, skipping: %s\n", t)
 			continue
 		}
 

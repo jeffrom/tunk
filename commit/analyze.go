@@ -93,7 +93,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		if errors.Is(err, ErrNoTags) {
 			initialTag := "v0.1.0"
 			if scope != "" {
-				initialTag = scope + "/0.1.0"
+				initialTag = scope + "/v0.1.0"
 			}
 			a.cfg.Warning(`no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
 		}

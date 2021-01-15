@@ -33,7 +33,7 @@ func buildGitTag(vArg semver.Version, scope, rc string) string {
 	var b strings.Builder
 	if scope != "" {
 		b.WriteString(scope)
-		b.WriteString("/")
+		b.WriteString("/v")
 	} else {
 		b.WriteString("v")
 	}
