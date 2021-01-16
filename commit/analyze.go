@@ -378,7 +378,7 @@ func buildTagPrefix(scope string) string {
 	if scope == "" {
 		return "v"
 	}
-	return scope + "/"
+	return scope + "/v"
 }
 
 type analyzedCommit struct {
