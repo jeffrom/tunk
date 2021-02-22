@@ -22,7 +22,11 @@ clean:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -cover -race ./...
+	GO111MODULE=on go test -cover ./...
+
+.PHONY: test.race
+test.race:
+	GO111MODULE=on go test -race ./...
 
 .PHONY: test.lint
 test.lint: $(staticcheck)

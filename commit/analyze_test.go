@@ -322,27 +322,27 @@ func TestAnalyzeRC(t *testing.T) {
 		},
 		{
 			name:      "scope",
-			tags:      []string{"cool/0.1.0"},
+			tags:      []string{"cool/v0.1.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool/0.1.1-rc.0",
+			expectTag: "cool/v0.1.1-rc.0",
 		},
 		{
 			name:      "scope-root",
-			tags:      []string{"v1.2.3", "cool/0.1.0"},
+			tags:      []string{"v1.2.3", "cool/v0.1.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool/0.1.1-rc.0",
+			expectTag: "cool/v0.1.1-rc.0",
 		},
 		{
 			name:      "scope-multi",
-			tags:      []string{"v1.2.3", "cool/0.1.0", "cool/0.1.1-rc.0"},
+			tags:      []string{"v1.2.3", "cool/v0.1.0", "cool/v0.1.1-rc.0"},
 			scope:     "cool",
 			allScopes: []string{"cool"},
 			commits:   []*model.Commit{conventionalScopedPatchCommit},
-			expectTag: "cool/0.1.1-rc.1",
+			expectTag: "cool/v0.1.1-rc.1",
 		},
 	}
 
