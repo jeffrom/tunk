@@ -1,0 +1,14 @@
+./logs/
+./report/
+/tmp
+./vendor/
+./build/
+./dist/
+
+*.test
+*.pprof
+*.out
+
+/testdata/*.golden.actual
+
+**/*.git

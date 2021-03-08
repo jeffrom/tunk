@@ -1,4 +1,4 @@
-FROM golang:1.15.3 as builder
+FROM golang:1.15.8 as builder
 
 RUN mkdir /build
 WORKDIR /build
@@ -14,6 +14,8 @@ ARG COMMIT=none
 RUN CGO_ENABLED=0 go build -o tunk.bin -ldflags "-s -w -X github.com/jeffrom/tunk/release.Version=${VERSION} -X github.com/jeffrom/tunk/release.Commit=${COMMIT}" ./cmd/tunk
 
 FROM alpine
+
+RUN set -x; apk add --no-cache git
 
 COPY --from=builder /build/tunk.bin /usr/local/bin/tunk
 
