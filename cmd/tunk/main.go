@@ -37,7 +37,7 @@ func main() {
 	args := flags.Args()[1:]
 
 	if help {
-		cfg.Printf("%s [rc]\n\nFLAGS\n%s", os.Args[0], flags.FlagUsages())
+		usage(cfg, flags)
 		return
 	}
 	if version {
@@ -78,4 +78,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func usage(cfg config.Config, flags *pflag.FlagSet) {
+	cfg.Printf("%s [rc]\n\nA utility for creating Semantic Versioning-compliant tags.\n\nFLAGS\n%s", os.Args[0], flags.FlagUsages())
 }
