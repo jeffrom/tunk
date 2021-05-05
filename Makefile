@@ -3,7 +3,7 @@ TMPDIR := $(if $(TMPDIR),$(TMPDIR),"/tmp/")
 GOPATH := $(shell go env GOPATH)
 
 bin := $(GOPATH)/bin/tunk
-gofiles := $(wildcard *.go **/*.go **/**/*.go **/**/**/*.go)
+gofiles := $(wildcard go.mod go.sum *.go **/*.go **/**/*.go **/**/**/*.go)
 
 gocoverutil := $(GOPATH)/bin/gocoverutil
 staticcheck := $(GOPATH)/bin/staticcheck
