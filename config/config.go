@@ -1,3 +1,4 @@
+// Package config contains tunk's configuration.
 package config
 
 import (

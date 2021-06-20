@@ -95,7 +95,7 @@ func (g *Git) Commit(ctx context.Context, opts vcs.CommitOpts) error {
 	return nil
 }
 
-const EXPECTED_LOG_PARTS = 9
+const ExpectedLogParts = 9
 
 func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, error) {
 	args := []string{
@@ -111,8 +111,8 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 	for scanner.Scan() {
 		s := scanner.Text()
 		parts := strings.Split(s, "_SEP_")
-		if len(parts) != EXPECTED_LOG_PARTS {
-			return nil, fmt.Errorf("gitcli: expected %d parts from git log, got %d", EXPECTED_LOG_PARTS, len(parts))
+		if len(parts) != ExpectedLogParts {
+			return nil, fmt.Errorf("gitcli: expected %d parts from git log, got %d", ExpectedLogParts, len(parts))
 		}
 
 		commitID := parts[0]

@@ -1,3 +1,4 @@
+// Package vcs abstracts version control systems. Currently just git.
 package vcs
 
 import (

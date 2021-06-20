@@ -179,7 +179,9 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 			continue
 		}
 
-		if maxCommit == nil || ac.releaseType > maxCommit.releaseType {
+		if maxCommit == nil {
+			maxCommit = ac
+		} else if ac.releaseType > maxCommit.releaseType {
 			maxCommit = ac
 		}
 		if latestCommit == nil || ac.commit.CommitterDate.After(latestCommit.commit.CommitterDate) {
