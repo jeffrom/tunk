@@ -16,6 +16,9 @@ type Config struct {
 	All            bool       `json:"all,omitempty"`
 	Scope          string     `json:"scope,omitempty"`
 	Commit         string     `json:"commit,omitempty"`
+	Major          bool       `json:"major,omitempty"`
+	Minor          bool       `json:"minor,omitempty"`
+	Patch          bool       `json:"patch,omitempty"`
 	Branches       []string   `json:"branches,omitempty"`
 	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
 	Policies       []string   `json:"policies,omitempty"`

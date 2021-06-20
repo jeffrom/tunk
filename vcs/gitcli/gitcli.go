@@ -171,9 +171,9 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 }
 
 func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpts) error {
-	// if opts.Message == "" {
-	// 	opts.Message = tag
-	// }
+	if opts.Message == "" {
+		opts.Message = tag
+	}
 	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
 		g.cfg.Printf("CI: setting author, author email")
 		opts.Author = "tunk"

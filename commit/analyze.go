@@ -99,6 +99,27 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		}
 		return nil, err
 	}
+
+	// handle overrides
+	if a.cfg.Major {
+		nextVer := latest
+		nextVer.Major++
+		nextVer.Minor = 0
+		nextVer.Patch = 0
+		return &Version{Version: nextVer}, nil
+	}
+	if a.cfg.Minor {
+		nextVer := latest
+		nextVer.Minor++
+		nextVer.Patch = 0
+		return &Version{Version: nextVer}, nil
+	}
+	if a.cfg.Patch {
+		nextVer := latest
+		nextVer.Patch++
+		return &Version{Version: nextVer}, nil
+	}
+
 	var latestRC semver.Version
 	var rcFound bool
 	if rc != "" {
@@ -115,6 +136,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	if rc != "" && rcFound && latestRC.GT(latest) {
 		latestVer = latestRC
 	}
+
 	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latestVer, scope, ""))
 	a.cfg.Debugf("log: %q", logQuery)
 	commits, err := a.vcs.ReadCommits(ctx, logQuery)
