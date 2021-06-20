@@ -2,9 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
+	"github.com/ghodss/yaml"
+	"github.com/imdario/mergo"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/pflag"
 
@@ -15,10 +21,18 @@ import (
 )
 
 func main() {
+	if err := run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func run(rawArgs []string) error {
 	cfg := config.New(nil)
 
 	var help bool
 	var version bool
+	var cfgFile string
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -34,17 +48,31 @@ func main() {
 	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
+	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
 
-	die(flags.Parse(os.Args))
+	die(flags.Parse(rawArgs))
 	args := flags.Args()[1:]
 
 	if help {
 		usage(cfg, flags)
-		return
+		return nil
 	}
 	if version {
 		cfg.Printf("%s", release.Version)
-		return
+		return nil
+	}
+
+	tunkYAML, err := readTunkYAML(cfgFile)
+	if err != nil {
+		return err
+	}
+	if tunkYAML != nil {
+		die(mergo.Merge(&cfg, tunkYAML, mergo.WithOverride))
+	}
+	if cfg.Debug {
+		b, err := json.MarshalIndent(cfg, "", "  ")
+		die(err)
+		cfg.Debugf("config: %s", string(b))
 	}
 
 	var rc string
@@ -56,8 +84,7 @@ func main() {
 	ctx := context.Background()
 	versions, err := rnr.Analyze(ctx, rc)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
 	}
 	cfg.Debugf("will tag %d:", len(versions))
 
@@ -81,6 +108,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+	return nil
 }
 
 func die(err error) {
@@ -91,4 +119,45 @@ func die(err error) {
 
 func usage(cfg config.Config, flags *pflag.FlagSet) {
 	cfg.Printf("%s [rc]\n\nA utility for creating Semantic Versioning-compliant tags.\n\nFLAGS\n%s", os.Args[0], flags.FlagUsages())
+}
+
+func readTunkYAML(p string) (*config.Config, error) {
+	if p != "" {
+		b, err := ioutil.ReadFile(p)
+		if err != nil {
+			return nil, err
+		}
+		cfg := &config.Config{}
+		if err := yaml.Unmarshal(b, cfg); err != nil {
+			return nil, err
+		}
+		return cfg, nil
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		candPath := filepath.Join(wd, "tunk.yaml")
+		b, err := ioutil.ReadFile(candPath)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				wd, _ = filepath.Split(filepath.Clean(wd))
+				if wd == "/" {
+					break
+				}
+				continue
+			}
+			return nil, err
+		}
+
+		cfg := &config.Config{}
+		if err := yaml.Unmarshal(b, cfg); err != nil {
+			return nil, err
+		}
+		return cfg, nil
+	}
+	return nil, nil
 }

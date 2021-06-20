@@ -42,9 +42,11 @@ func NewWithTerminalIO(overrides *Config, termio *TerminalIO) Config {
 	cfg.Term = *termio
 
 	if overrides != nil {
-		if err := mergo.Merge(&cfg, overrides); err != nil {
+		if err := mergo.Merge(overrides, cfg); err != nil {
 			panic(err)
 		}
+		// fmt.Printf("merged: %+v\n", *overrides)
+		return *overrides
 	}
 	return cfg
 }

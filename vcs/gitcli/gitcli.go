@@ -84,7 +84,7 @@ func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts)
 	args = append(args, upstream, ref)
 
 	if g.cfg.Dryrun {
-		g.cfg.Printf("+ git %s (dryrun)", argsString(args))
+		g.cfg.Printf("+ git %s (dryrun)", ArgsString(args))
 		return nil
 	}
 	_, err := g.call(ctx, args)
@@ -200,7 +200,7 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 	args = append(args, "-m", opts.Message)
 
 	if g.cfg.Dryrun {
-		g.cfg.Printf("+ git %s (dryrun)", argsString(args))
+		g.cfg.Printf("+ git %s (dryrun)", ArgsString(args))
 		return nil
 	}
 	_, err := g.call(ctx, args)
@@ -235,8 +235,8 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 	userArgs := []string{"config", "user.name", author}
 	emailArgs := []string{"config", "user.email", email}
 	if g.cfg.Dryrun {
-		g.cfg.Printf("+ git %s (dryrun)", argsString(userArgs))
-		g.cfg.Printf("+ git %s (dryrun)", argsString(emailArgs))
+		g.cfg.Printf("+ git %s (dryrun)", ArgsString(userArgs))
+		g.cfg.Printf("+ git %s (dryrun)", ArgsString(emailArgs))
 		return nil
 	}
 	if _, err := g.call(ctx, userArgs); err != nil {
@@ -259,7 +259,7 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 // 	currURL := strings.TrimSuffix(string(b), "\n")
 // 	if err != nil {
 // 		args := []string{"remote", "add", upstream}
-// 		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+// 		g.cfg.Printf("+ git %s%s", ArgsString(append(args, scrubbedURL)), printSuffix)
 // 		if g.cfg.Dryrun {
 // 			return nil
 // 		}
@@ -267,7 +267,7 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 // 		return aerr
 // 	} else if currURL != url {
 // 		args := []string{"remote", "set-url", upstream}
-// 		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+// 		g.cfg.Printf("+ git %s%s", ArgsString(append(args, scrubbedURL)), printSuffix)
 // 		if g.cfg.Dryrun {
 // 			return nil
 // 		}

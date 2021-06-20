@@ -22,7 +22,7 @@ clean:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -cover ./...
+	GO111MODULE=on go test -short -cover ./...
 
 .PHONY: test.race
 test.race:

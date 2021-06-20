@@ -19,7 +19,8 @@ $ go install github.com/jeffrom/tunk/cmd/tunk
 ```bash
 tunk [rc]
 
-A utility for creating Semantic Versioning-compliant tags.
+A utility for creating Semantic Versioning-compliant tags using a commit
+message policy.
 
 FLAGS
       --all                    operate on all scopes

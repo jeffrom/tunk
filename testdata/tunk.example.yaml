@@ -1,0 +1,20 @@
+custom_policies:
+  - name: conventional
+    subject_regex: "^(?P<type>[A-Za-z0-9]+)(?P<scope>\([^\)]+\))?!?:\s+(?P<body>.+)$"
+    body_annotation_start_regex: "^(?P<type>[A-Z ]+): "
+    breaking_change_types: ["BREAKING CHANGE"]
+    commit_types:
+      feat: MINOR
+      fix: PATCH
+      revert: PATCH
+      cont: PATCH
+      perf: PATCH
+      improvement: PATCH
+      refactor: PATCH
+      style: PATCH
+      test: SKIP
+      chore: SKIP
+      docs: SKIP
+  - name: lax
+    subject_regex: "^(?P<scope>[A-Za-z0-9_-]+): "
+    fallback_type: PATCH

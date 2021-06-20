@@ -1,0 +1,4 @@
+policies:
+  - lax
+release_scopes:
+  - cool

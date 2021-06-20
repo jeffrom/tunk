@@ -26,8 +26,8 @@ func (g *Git) call(ctx context.Context, args []string) ([]byte, error) {
 	return ob.Bytes(), err
 }
 
-// argsString returns a string suitable for copy/paste into the terminal.
-func argsString(args []string) string {
+// ArgsString returns a string suitable for copy/paste into the terminal.
+func ArgsString(args []string) string {
 	b := &bytes.Buffer{}
 
 	for i, arg := range args {

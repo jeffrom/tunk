@@ -195,9 +195,9 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		if err != nil {
 			return nil, err
 		}
-		// fmt.Println(ac.scope, scope, ac.isScoped(scope, allScopes))
+		// fmt.Println("sup", ac.scope, scope, ac.isScoped(scope, allScopes), allScopes)
 		if !ac.isScoped(scope, allScopes) {
-			a.cfg.Debugf("skipping out of scope commit (scope: %q, commit scope: %q)", scope, ac.scope)
+			a.cfg.Debugf("skipping out of scope commit %s (scope: %q, commit scope: %q)", commit.ShortID(), scope, ac.scope)
 			continue
 		}
 
@@ -220,7 +220,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.commit.ShortID(), maxCommit.releaseType, maxCommit.scope, latestCommit.commit.ShortID())
 	nextVersion := latest
 	if maxCommit.releaseType >= ReleasePatch {
-		a.cfg.Debugf("will bump %s version", maxCommit.releaseType)
+		a.cfg.Debugf("%s: will bump %s version (scope: %q)", latestCommit.commit.ShortID(), maxCommit.releaseType, scope)
 		switch maxCommit.releaseType {
 		case ReleaseMajor:
 			nextVersion.Major++
@@ -249,6 +249,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 		var subjectMatch []string
 		if subjectRE != nil {
 			subjectMatch = subjectRE.FindStringSubmatch(commit.Subject)
+			a.cfg.Debugf("%s: policy %q subject match: %+v", commit.ShortID(), pol.Name, subjectMatch)
 		}
 
 		typeMatch := false
@@ -258,6 +259,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 				group := subjectMatch[i]
 				switch subexp {
 				case "type":
+					a.cfg.Debugf("%s: policy %q subject type: %q", commit.ShortID(), pol.Name, group)
 					commitType := group
 					if pol.CommitTypes != nil {
 						rt, ok := pol.CommitTypes[commitType]
@@ -267,8 +269,14 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 						}
 					}
 				case "scope":
+					a.cfg.Debugf("%s: policy %q subject scope: %q", commit.ShortID(), pol.Name, group)
 					ac.scope = strings.Trim(group, "~!@#$%^&*()_+`-=[]\\{}|';:\",./<>?")
 				}
+			}
+
+			if ac.scope != "" && ac.releaseType == 0 && pol.FallbackReleaseType != "" {
+				ac.releaseType = ReleaseTypeFromString(pol.FallbackReleaseType)
+				typeMatch = true
 			}
 
 			if typeMatch {
