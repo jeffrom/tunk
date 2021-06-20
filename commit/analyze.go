@@ -77,7 +77,7 @@ func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 	}
 
 	if len(versions) == 0 && !a.cfg.InCI {
-		return versions, errors.New("No releaseable commits have been created since the last release was tagged.")
+		return versions, errors.New("no releaseable commits have been created since the last release was tagged")
 	}
 	return versions, nil
 }
@@ -140,9 +140,9 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 
 func (a *Analyzer) checkPolicies(ctx context.Context, mainBranch string) error {
 	// in local env, make sure the current commit is on one of the allowed branches
-	if a.cfg.InCI {
-		// XXX
-	}
+	// if a.cfg.InCI {
+	// 	// XXX
+	// }
 
 	currCommit, err := a.vcs.CurrentCommit(ctx)
 	if err != nil {
@@ -154,7 +154,7 @@ func (a *Analyzer) checkPolicies(ctx context.Context, mainBranch string) error {
 		return err
 	}
 	if !ok && !a.cfg.Dryrun {
-		return fmt.Errorf("Current commit %s is not on the main branch %q", currCommit[:8], mainBranch)
+		return fmt.Errorf("current commit %s is not on the main branch %q", currCommit[:8], mainBranch)
 	}
 	return nil
 }

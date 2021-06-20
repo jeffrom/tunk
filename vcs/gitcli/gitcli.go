@@ -70,9 +70,9 @@ func (g *Git) BranchContains(ctx context.Context, commit, branch string) (bool, 
 }
 
 func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts) error {
-	if g.cfg.InCI {
-		// check token, creds, setup author etc
-	}
+	// if g.cfg.InCI {
+	// 	// check token, creds, setup author etc
+	// }
 
 	args := []string{"push"}
 	if opts.FollowTags {
@@ -171,9 +171,9 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 }
 
 func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpts) error {
-	if opts.Message == "" {
-		opts.Message = fmt.Sprintf("%s", tag)
-	}
+	// if opts.Message == "" {
+	// 	opts.Message = tag
+	// }
 	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
 		g.cfg.Printf("CI: setting author, author email")
 		opts.Author = "tunk"
@@ -248,34 +248,34 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 	return nil
 }
 
-func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, user, token string) error {
-	printSuffix := ""
-	if g.cfg.Dryrun {
-		printSuffix = " (dryrun)"
-	}
-	scrubbedURL := fmt.Sprintf("https://%s:xxxxxx@github.com/%s/%s.git", user, repoName, remoteName)
-	url := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", user, token, repoName, remoteName)
-	b, err := g.call(ctx, []string{"remote", "get-url", upstream})
-	currURL := strings.TrimSuffix(string(b), "\n")
-	if err != nil {
-		args := []string{"remote", "add", upstream}
-		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
-		if g.cfg.Dryrun {
-			return nil
-		}
-		_, aerr := g.call(ctx, append(args, url))
-		return aerr
-	} else if currURL != url {
-		args := []string{"remote", "set-url", upstream}
-		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
-		if g.cfg.Dryrun {
-			return nil
-		}
-		_, serr := g.call(ctx, append(args, url))
-		return serr
-	}
-	return nil
-}
+// func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, user, token string) error {
+// 	printSuffix := ""
+// 	if g.cfg.Dryrun {
+// 		printSuffix = " (dryrun)"
+// 	}
+// 	scrubbedURL := fmt.Sprintf("https://%s:xxxxxx@github.com/%s/%s.git", user, repoName, remoteName)
+// 	url := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", user, token, repoName, remoteName)
+// 	b, err := g.call(ctx, []string{"remote", "get-url", upstream})
+// 	currURL := strings.TrimSuffix(string(b), "\n")
+// 	if err != nil {
+// 		args := []string{"remote", "add", upstream}
+// 		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+// 		if g.cfg.Dryrun {
+// 			return nil
+// 		}
+// 		_, aerr := g.call(ctx, append(args, url))
+// 		return aerr
+// 	} else if currURL != url {
+// 		args := []string{"remote", "set-url", upstream}
+// 		g.cfg.Printf("+ git %s%s", argsString(append(args, scrubbedURL)), printSuffix)
+// 		if g.cfg.Dryrun {
+// 			return nil
+// 		}
+// 		_, serr := g.call(ctx, append(args, url))
+// 		return serr
+// 	}
+// 	return nil
+// }
 
 func checkListBranchOutput(out []byte, candidate string) (bool, error) {
 	s := bufio.NewScanner(bytes.NewReader(out))

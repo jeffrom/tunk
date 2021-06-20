@@ -39,9 +39,9 @@ func TestAnalyzeNoCommits(t *testing.T) {
 
 var basicPatchCommit = &model.Commit{ID: "deadbeef", Subject: "cool subject"}
 
-var basicCommits = []*model.Commit{
-	basicPatchCommit,
-}
+// var basicCommits = []*model.Commit{
+// 	basicPatchCommit,
+// }
 
 var conventionalSkipCommit = &model.Commit{ID: "deadbeef", Subject: "chore: cool chore"}
 var conventionalPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix: cool fix"}
@@ -50,10 +50,10 @@ var conventionalMajorCommit = &model.Commit{ID: "deadbeef", Subject: "feat: cool
 
 var conventionalScopedPatchCommit = &model.Commit{ID: "deadbeef", Subject: "fix(cool): cool fix"}
 
-var conventionalCommits = []*model.Commit{
-	commitWithID(conventionalPatchCommit, "12345678"),
-	conventionalMinorCommit,
-}
+// var conventionalCommits = []*model.Commit{
+// 	commitWithID(conventionalPatchCommit, "12345678"),
+// 	conventionalMinorCommit,
+// }
 
 func commitWithID(commit *model.Commit, id string) *model.Commit {
 	c := *commit
