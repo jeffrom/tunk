@@ -25,6 +25,15 @@ func New(cfg config.Config, vcs vcs.Interface) *Runner {
 	}
 }
 
+func (r *Runner) Check(ctx context.Context, rc string) error {
+	// TODO check release is allowed on this branch
+	// mainBranch, err := r.vcs.GetMainBranch(ctx, r.cfg.Branches)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	return nil
+}
+
 func (r *Runner) Analyze(ctx context.Context, rc string) ([]*commit.Version, error) {
 	return r.analyzer.Analyze(ctx, rc)
 }
@@ -41,6 +50,13 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 			return err
 		}
 	}
+	return nil
+}
+
+func (r *Runner) PushTags(ctx context.Context) error {
+	// if err := r.vcs.Push(ctx, "origin", r.cfg. {
+
+	// }
 	return nil
 }
 

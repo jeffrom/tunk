@@ -41,11 +41,12 @@ func run(rawArgs []string) error {
 	flags.BoolVar(&cfg.Major, "major", false, "bump major version")
 	flags.BoolVar(&cfg.Minor, "minor", false, "bump minor version")
 	flags.BoolVar(&cfg.Patch, "patch", false, "bump patch version")
+	flags.BoolVar(&cfg.InCI, "ci", false, "Run in CI mode")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
-	flags.StringVar(&cfg.TagTemplate, "tag-template", "", "go text/template for tag")
+	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag")
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
-	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
-	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
+	flags.StringArrayVar(&cfg.ReleaseScopes, "release-scope", nil, "declare release scopes")
+	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
@@ -60,6 +61,11 @@ func run(rawArgs []string) error {
 	if version {
 		cfg.Printf("%s", release.Version)
 		return nil
+	}
+	if !cfg.InCI {
+		if env := os.Getenv("CI"); env == "true" || env == "1" || env == "yes" {
+			cfg.InCI = true
+		}
 	}
 
 	tunkYAML, err := readTunkYAML(cfgFile)
@@ -82,6 +88,10 @@ func run(rawArgs []string) error {
 
 	rnr := runner.New(cfg, gitcli.New(cfg, ""))
 	ctx := context.Background()
+	if err := rnr.Check(ctx, rc); err != nil {
+		return err
+	}
+
 	versions, err := rnr.Analyze(ctx, rc)
 	if err != nil {
 		return err
@@ -105,8 +115,14 @@ func run(rawArgs []string) error {
 	}
 
 	if err := rnr.CreateTags(ctx, versions); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return err
+	}
+
+	if cfg.InCI && len(versions) > 0 {
+		cfg.Printf("Pushing tags in CI mode...")
+		if err := rnr.PushTags(ctx); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -118,7 +134,26 @@ func die(err error) {
 }
 
 func usage(cfg config.Config, flags *pflag.FlagSet) {
-	cfg.Printf("%s [rc]\n\nA utility for creating Semantic Versioning-compliant tags.\n\nFLAGS\n%s", os.Args[0], flags.FlagUsages())
+	cfg.Printf(`%s [rc]
+
+A utility for creating Semantic Version-compliant tags.
+
+FLAGS
+%s
+EXAMPLES
+
+# bump the version, if there are any new commits
+$ tunk
+
+# bump the minor version regardless of the state of the branch.
+$ tunk --minor
+
+# bump the version for scope "myscope" only
+$ tunk -s myscope
+
+# bump the version for all release scopes (can be defined in tunk.yaml)
+$ tunk --all --release-scope myscope --release-scope another-scope
+`, os.Args[0], flags.FlagUsages())
 }
 
 func readTunkYAML(p string) (*config.Config, error) {

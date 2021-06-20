@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -17,8 +18,9 @@ import (
 
 // Git implements vcs.Interface using the git commandline tool.
 type Git struct {
-	cfg config.Config
-	wd  string
+	cfg     config.Config
+	wd      string
+	askpass string
 }
 
 func New(cfg config.Config, wd string) *Git {
@@ -185,9 +187,8 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 				return err
 			}
 		}
-		ghToken := os.Getenv("GITHUB_TOKEN")
-		if ghToken == "" {
-			return errors.New("gitcli tag: GITHUB_TOKEN is required in CI")
+		if err := g.setupAskpass(); err != nil {
+			return err
 		}
 	}
 
@@ -208,7 +209,7 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 }
 
 func (g *Git) DeleteTag(ctx context.Context, commit, tag string) error {
-	return nil
+	return errors.New("not implemented")
 }
 
 func (g *Git) ReadTags(ctx context.Context, query string) ([]string, error) {
@@ -245,6 +246,33 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 	if _, err := g.call(ctx, emailArgs); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (g *Git) setupAskpass() error {
+	if g.askpass != "" {
+		return nil
+	}
+	token := getenv("GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN")
+	if token == "" {
+		return errors.New("gitcli tag: GIT_TOKEN, GITHUB_TOKEN, or GH_TOKEN is required for CI mode")
+	}
+	f, err := ioutil.TempFile("", "tunk")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	b := []byte(fmt.Sprintf(`echo "%s"`, token))
+	if _, err := f.Write(b); err != nil {
+		return err
+	}
+
+	if err := os.Chmod(f.Name(), 0700); err != nil {
+		return err
+	}
+
+	g.askpass = f.Name()
 	return nil
 }
 
@@ -289,4 +317,13 @@ func checkListBranchOutput(out []byte, candidate string) (bool, error) {
 		return false, err
 	}
 	return false, nil
+}
+
+func getenv(names ...string) string {
+	for _, name := range names {
+		if env := os.Getenv(name); env != "" {
+			return env
+		}
+	}
+	return ""
 }

@@ -19,6 +19,10 @@ func (g *Git) call(ctx context.Context, args []string) ([]byte, error) {
 	cmd.Stderr = eb
 	cmd.Stdout = ob
 
+	if g.askpass != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("GIT_ASKPASS=%s", g.askpass))
+	}
+
 	err := cmd.Run()
 	if err != nil {
 		return nil, fmt.Errorf("exec: git %q failed: %s (%w)", args, eb.String(), err)
