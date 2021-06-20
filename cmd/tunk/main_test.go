@@ -85,7 +85,7 @@ func TestTunk(t *testing.T) {
 				// fmt.Printf("op: %+v\n", testop)
 				// fmt.Println(testop.TunkArgs == nil, len(testop.TunkArgs))
 				if testop.Commit != "" {
-					call(ctx, t, "git", "commit", "--allow-empty", "-am", testop.Commit)
+					call(ctx, t, "git", "commit", "--allow-empty", "-m", testop.Commit)
 				}
 				if testop.Tag != "" {
 					call(ctx, t, "git", "tag", "-a", testop.Tag, "-m", testop.Tag)
