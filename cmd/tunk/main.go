@@ -25,15 +25,14 @@ func main() {
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
 	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
+	flags.StringVar(&cfg.TagTemplate, "tag-template", "", "go text/template for tag")
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "scopes", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.Policies, "policies", []string{"conventional-lax", "lax"}, "declare policies to use")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 
-	if err := flags.Parse(os.Args); err != nil {
-		panic(err)
-	}
+	die(flags.Parse(os.Args))
 	args := flags.Args()[1:]
 
 	if help {
@@ -50,9 +49,9 @@ func main() {
 		rc = args[0]
 	}
 
-	runner := runner.New(cfg, gitcli.New(cfg, ""))
+	rnr := runner.New(cfg, gitcli.New(cfg, ""))
 	ctx := context.Background()
-	versions, err := runner.Analyze(ctx, rc)
+	versions, err := rnr.Analyze(ctx, rc)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -62,21 +61,28 @@ func main() {
 	stdoutfd := os.Stdout.Fd()
 	istty := isatty.IsTerminal(stdoutfd)
 	for _, ver := range versions {
+		tag, err := runner.RenderTag(cfg, ver)
+		die(err)
 		if cfg.Quiet {
-			tag := ver.GitTag()
 			if istty {
 				fmt.Println(tag)
 			} else {
 				fmt.Print(tag)
 			}
 		} else {
-			cfg.Printf("-> %s:%s", ver.ShortCommit(), ver.GitTag())
+			cfg.Printf("-> %s:%s", ver.ShortCommit(), tag)
 		}
 	}
 
-	if err := runner.CreateTags(ctx, versions); err != nil {
+	if err := rnr.CreateTags(ctx, versions); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func die(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
 

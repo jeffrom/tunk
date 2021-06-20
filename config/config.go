@@ -19,6 +19,7 @@ type Config struct {
 	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
 	Policies       []string   `json:"policies,omitempty"`
 	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
+	TagTemplate    string     `json:"tag_template,omitempty"`
 	Term           TerminalIO `json:"-"`
 
 	// IgnorePolicies ignores policy restrictions. Intended for testing only.
