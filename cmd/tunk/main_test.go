@@ -21,10 +21,11 @@ import (
 var goldenEnv = os.Getenv("GOLDEN")
 
 type testOperation struct {
-	Commit   string   `json:"commit,omitempty"`
-	Tag      string   `json:"tag,omitempty"`
-	TunkArgs []string `json:"tunk,omitempty"`
-	GitArgs  []string `json:"git,omitempty"`
+	Commit     string   `json:"commit,omitempty"`
+	Tag        string   `json:"tag,omitempty"`
+	TunkArgs   []string `json:"tunk,omitempty"`
+	GitArgs    []string `json:"git,omitempty"`
+	ShouldFail bool
 }
 
 type defaultModeTestCase struct {
@@ -65,15 +66,7 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 
 		tmpDir, err := ioutil.TempDir("", fmt.Sprintf("tunk-%s", name))
 		die(err)
-		defer func() {
-			if t.Failed() {
-				t.Logf("Test failed. Leaving temp dir: %s", tmpDir)
-				return
-			}
-			t.Logf("Removing temp dir: %s", tmpDir)
-			os.RemoveAll(tmpDir)
-		}()
-
+		defer cleanupTempdir(t, tmpDir)
 		die(os.Chdir(tmpDir))
 
 		// setup env
@@ -119,7 +112,7 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 			runOp(ctx, t, *testop)
 		}
 
-		logOut := goldenGitLog(ctx, t)
+		logOut := goldenGitLog(ctx, t, false)
 
 		goldenPath := filepath.Join(tc.dir, "expect")
 		if env := goldenEnv; env != "" {
@@ -144,13 +137,19 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 	}
 }
 
-func goldenGitLog(ctx context.Context, t testing.TB) []byte {
+func goldenGitLog(ctx context.Context, t testing.TB, author bool) []byte {
 	t.Helper()
-	logOut, err := exec.CommandContext(ctx,
-		"git", "log", "--graph",
-		"--pretty=format:%d %s",
+	args := []string{"log", "--graph",
 		"--abbrev-commit",
-	).Output()
+	}
+	if author {
+		args = append(args, "--pretty=format:%d %s \"%an\" <%ae>")
+	} else {
+		args = append(args, "--pretty=format:%d %s")
+	}
+
+	logOut, err := exec.CommandContext(ctx,
+		"git", args...).Output()
 	die(err)
 	return logOut
 }
@@ -164,7 +163,13 @@ func runOp(ctx context.Context, t *testing.T, testop testOperation) {
 		call(ctx, t, "git", "tag", "-a", testop.Tag, "-m", testop.Tag)
 	}
 	if testop.TunkArgs != nil {
-		callTunk(t, testop.TunkArgs...)
+		args := testop.TunkArgs
+		t.Logf("tunk(%s)", gitcli.ArgsString(args))
+		if err := run(append([]string{"tunk"}, args...)); !testop.ShouldFail && err != nil {
+			t.Fatal(err)
+		} else if testop.ShouldFail && err == nil {
+			t.Fatal("expected error but got none")
+		}
 	}
 	if testop.GitArgs != nil {
 		call(ctx, t, "git", testop.GitArgs...)
@@ -240,13 +245,13 @@ func call(ctx context.Context, t *testing.T, arg string, args ...string) {
 	}
 }
 
-func callTunk(t *testing.T, args ...string) {
-	t.Helper()
-	t.Logf("tunk(%s)", gitcli.ArgsString(args))
-	if err := run(append([]string{"tunk"}, args...)); err != nil {
-		t.Fatal(err)
-	}
-}
+// func callTunk(t *testing.T, args ...string) {
+// 	t.Helper()
+// 	t.Logf("tunk(%s)", gitcli.ArgsString(args))
+// 	if err := run(append([]string{"tunk"}, args...)); err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
 func resetEnviron(t testing.TB, environ []string) {
 	t.Helper()
@@ -258,4 +263,14 @@ func resetEnviron(t testing.TB, environ []string) {
 		key, val := parts[0], parts[1]
 		die(os.Setenv(key, val))
 	}
+}
+
+func cleanupTempdir(t testing.TB, p string) {
+	t.Helper()
+	if t.Failed() {
+		t.Logf("Test failed, leaving tempdir in place: %s", p)
+		return
+	}
+	t.Logf("Removing tempdir %s", p)
+	os.RemoveAll(p)
 }

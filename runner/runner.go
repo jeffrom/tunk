@@ -4,6 +4,7 @@ package runner
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"text/template"
 
 	"github.com/jeffrom/tunk/commit"
@@ -12,9 +13,10 @@ import (
 )
 
 type Runner struct {
-	cfg      config.Config
-	vcs      vcs.Interface
-	analyzer *commit.Analyzer
+	cfg        config.Config
+	vcs        vcs.Interface
+	analyzer   *commit.Analyzer
+	mainBranch string
 }
 
 func New(cfg config.Config, vcs vcs.Interface) *Runner {
@@ -26,11 +28,32 @@ func New(cfg config.Config, vcs vcs.Interface) *Runner {
 }
 
 func (r *Runner) Check(ctx context.Context, rc string) error {
-	// TODO check release is allowed on this branch
-	// mainBranch, err := r.vcs.GetMainBranch(ctx, r.cfg.Branches)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if r.mainBranch == "" {
+		branches := r.cfg.Branches
+		if r.cfg.InCI && !r.cfg.BranchesSet {
+			branches = nil
+		}
+		var mainBranch string
+		var err error
+		mainBranch, err = r.vcs.GetMainBranch(ctx, branches)
+		if err != nil {
+			r.cfg.Printf("Get remote failed, falling back to defaults: %v", r.cfg.Branches)
+			mainBranch, err = r.vcs.GetMainBranch(ctx, r.cfg.Branches)
+			if err != nil {
+				return err
+			}
+		}
+		r.mainBranch = mainBranch
+		r.cfg.Printf("Main branch is %q", mainBranch)
+	}
+
+	currBranch, err := r.vcs.CurrentBranch(ctx)
+	if err != nil {
+		return err
+	}
+	if currBranch != r.mainBranch && !r.cfg.Dryrun {
+		return fmt.Errorf("commit must be on branch %s, not %s", r.mainBranch, currBranch)
+	}
 	return nil
 }
 
@@ -54,7 +77,7 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 }
 
 func (r *Runner) PushTags(ctx context.Context) error {
-	if err := r.vcs.Push(ctx, "origin", "master", vcs.PushOpts{FollowTags: true}); err != nil {
+	if err := r.vcs.Push(ctx, "origin", r.mainBranch, vcs.PushOpts{FollowTags: true}); err != nil {
 		return err
 	}
 	return nil

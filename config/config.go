@@ -28,6 +28,7 @@ type Config struct {
 
 	// IgnorePolicies ignores policy restrictions. Intended for testing only.
 	IgnorePolicies bool `json:"-"`
+	BranchesSet    bool `json:"-"`
 }
 
 func New(overrides *Config) Config {

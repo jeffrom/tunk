@@ -3,9 +3,18 @@ package vcs
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jeffrom/tunk/model"
 )
+
+type NotFoundError struct {
+	Ref string
+}
+
+func (e NotFoundError) Error() string {
+	return fmt.Sprintf("vcs: ref %q not found", e.Ref)
+}
 
 type Interface interface {
 	Fetch(ctx context.Context, upstream, ref string) error
@@ -16,6 +25,7 @@ type Interface interface {
 	DeleteTag(ctx context.Context, commit, tag string) error
 	ReadTags(ctx context.Context, query string) ([]string, error)
 	GetMainBranch(ctx context.Context, candidates []string) (string, error)
+	CurrentBranch(ctx context.Context) (string, error)
 	BranchContains(ctx context.Context, commit, branch string) (bool, error)
 	CurrentCommit(ctx context.Context) (string, error)
 }

@@ -18,7 +18,8 @@ $(bin): $(gofiles)
 
 .PHONY: clean
 clean:
-	git clean -x -f
+	# git clean -x -f
+	rm -rf $(TMPDIR)/tunk-*
 
 .PHONY: test
 test:
@@ -31,6 +32,7 @@ test.race:
 .PHONY: test.lint
 test.lint: $(staticcheck)
 	GO111MODULE=on $(staticcheck) -checks all ./...
+	go vet ./...
 
 .PHONY: test.cover
 test.cover: $(gocoverutil)

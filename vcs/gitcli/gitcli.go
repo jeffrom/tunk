@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/jeffrom/tunk/config"
@@ -36,6 +37,18 @@ func (g *Git) Fetch(ctx context.Context, upstream, ref string) error {
 }
 
 func (g *Git) GetMainBranch(ctx context.Context, candidates []string) (string, error) {
+	if g.cfg.InCI {
+		if err := g.setupAskpass(); err != nil {
+			return "", err
+		}
+	}
+	if len(candidates) == 0 {
+		remoteInfo, err := g.call(ctx, []string{"remote", "show", "origin"})
+		if err != nil {
+			return "", err
+		}
+		return getRemoteShowHeadBranch(remoteInfo)
+	}
 	args := []string{"branch", "--list"}
 	for _, cand := range candidates {
 		b, err := g.call(ctx, append(args, cand))
@@ -70,6 +83,15 @@ func (g *Git) BranchContains(ctx context.Context, commit, branch string) (bool, 
 		return false, err
 	}
 	return checkListBranchOutput(b, branch)
+}
+
+func (g *Git) CurrentBranch(ctx context.Context) (string, error) {
+	args := []string{"branch", "--show-current"}
+	b, err := g.call(ctx, args)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes.TrimSpace(b)), nil
 }
 
 func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts) error {
@@ -363,4 +385,21 @@ func getenv(names ...string) string {
 		}
 	}
 	return ""
+}
+
+// HEAD branch: master
+var remoteShowHeadBranchRE = regexp.MustCompile(`^\s*HEAD branch: (?P<branch>\S+)$`)
+
+func getRemoteShowHeadBranch(b []byte) (string, error) {
+	s := bufio.NewScanner(bytes.NewReader(b))
+	for s.Scan() {
+		m := remoteShowHeadBranchRE.FindSubmatch(s.Bytes())
+		if len(m) == 2 {
+			return string(m[1]), nil
+		}
+	}
+	if err := s.Err(); err != nil {
+		return "", err
+	}
+	return "", nil
 }

@@ -85,6 +85,10 @@ func (m *Mock) GetMainBranch(ctx context.Context, candidates []string) (string, 
 	return "main", nil
 }
 
+func (m *Mock) CurrentBranch(ctx context.Context) (string, error) {
+	return "main", nil
+}
+
 func globMatches(s string, glob string) bool {
 	parts := strings.Split(glob, "*")
 	remaining := s

@@ -22,7 +22,7 @@ import (
 
 func main() {
 	if err := run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -80,6 +80,14 @@ func run(rawArgs []string) error {
 		die(err)
 		cfg.Debugf("config: %s", string(b))
 	}
+	branchesSet := false
+	if fl := flags.Lookup("branch"); fl != nil && fl.Changed {
+		branchesSet = true
+	}
+	if tunkYAML != nil && len(tunkYAML.Branches) > 0 {
+		branchesSet = true
+	}
+	cfg.BranchesSet = branchesSet
 
 	var rc string
 	if len(args) > 0 {

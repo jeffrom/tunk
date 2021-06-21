@@ -21,9 +21,13 @@ import (
 var ciSourceDir = Path("testdata/ci_mode")
 
 type ciModeTestCase struct {
-	name    string
-	passwd  string
-	gitCfg  *gitkit.Config
+	name   string
+	passwd string
+	gitCfg *gitkit.Config
+	// preOps happens before starting the server. for setup
+	preOps []testOperation
+	// srvOps happens on the server, directly in the bare repo, *after* preOps
+	srvOps  []testOperation
 	ops     []testOperation
 	environ []string
 	gitPath string
@@ -49,12 +53,52 @@ func TestTunkCIMode(t *testing.T) {
 			gitPath: gitPath,
 			name:    "basic",
 			passwd:  "coolpass",
-			ops: []testOperation{
+			preOps: []testOperation{
 				{Commit: "initial commit"},
 				{Tag: "v0.1.0"},
+				{GitArgs: strs("push", "--follow-tags", "origin", "master")},
+			},
+			ops: []testOperation{
 				{Commit: "feat: a"},
 				{GitArgs: strs("push", "origin", "master")},
 				{TunkArgs: strs("--ci")},
+			},
+			environ: strs("GIT_TOKEN=coolpass"),
+		},
+
+		{
+			gitPath: gitPath,
+			name:    "main-branch",
+			passwd:  "coolpass",
+			srvOps: []testOperation{
+				{GitArgs: strs("symbolic-ref", "refs/remotes/origin/HEAD", "refs/heads/main")},
+				{GitArgs: strs("symbolic-ref", "HEAD", "refs/heads/main")},
+			},
+			preOps: []testOperation{
+				{Commit: "initial commit"},
+				{GitArgs: strs("branch", "-m", "master", "main")},
+				{Tag: "v0.1.0"},
+				{GitArgs: strs("push", "--follow-tags", "origin", "main")},
+			},
+			ops: []testOperation{
+				{Commit: "feat: a"},
+				{GitArgs: strs("push", "-u", "origin", "main")},
+				{TunkArgs: strs("--ci")},
+			},
+			environ: strs("GIT_TOKEN=coolpass"),
+		},
+
+		{
+			gitPath: gitPath,
+			name:    "not-trunk",
+			passwd:  "coolpass",
+			ops: []testOperation{
+				{Commit: "feat: a"},
+				{GitArgs: strs("push", "-u", "origin", "master")},
+				{GitArgs: strs("checkout", "-b", "coolbranch")},
+				{Commit: "fix: b"},
+				{GitArgs: strs("push", "-u", "origin", "coolbranch")},
+				{TunkArgs: strs("--ci"), ShouldFail: true},
 			},
 			environ: strs("GIT_TOKEN=coolpass"),
 		},
@@ -71,14 +115,7 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 		repoPath, err := ioutil.TempDir("", "tunk-repo")
 		die(err)
 		t.Logf("Clone dir: %s", repoPath)
-		defer func(t *testing.T) {
-			if t.Failed() {
-				t.Logf("Test failed, leaving clone dir in place: %s", repoPath)
-				return
-			}
-			t.Logf("Removing clone dir %s", repoPath)
-			os.RemoveAll(repoPath)
-		}(t)
+		defer cleanupTempdir(t, repoPath)
 
 		wd, err := os.Getwd()
 		die(err)
@@ -100,6 +137,26 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 		}
 
 		srv := newGitServer(tc.passwd, tc.gitCfg)
+		srvRepoDir := filepath.Join(srv.dir, "myrepo.git")
+		die(os.MkdirAll(srvRepoDir, 0755))
+		die(os.Chdir(srvRepoDir))
+		call(ctx, t, "git", "init", "--bare", ".")
+
+		srvRepoCloneDir, err := ioutil.TempDir("", "tunk-repo")
+		die(err)
+		die(os.Chdir(srvRepoCloneDir))
+		call(ctx, t, "git", "clone", srvRepoDir, ".")
+		for _, op := range tc.preOps {
+			runOp(ctx, t, op)
+		}
+		// call(ctx, t, "git", "push", "--follow-tags", "origin", "master")
+
+		die(os.Chdir(srvRepoDir))
+		t.Logf("running %d bare repo ops", len(tc.srvOps))
+		for _, op := range tc.srvOps {
+			runOp(ctx, t, op)
+		}
+
 		addr := srv.start(t)
 		defer srv.stop(t)
 
@@ -113,7 +170,7 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 
 		// check results in "remote"
 		die(os.Chdir(filepath.Join(srv.dir, "myrepo.git")))
-		logOut := goldenGitLog(ctx, t)
+		logOut := goldenGitLog(ctx, t, true)
 		goldenPath := filepath.Join(ciSourceDir, tc.name, "expect")
 		if env := goldenEnv; env != "" {
 			t.Logf("Writing golden file at %s", goldenPath)
