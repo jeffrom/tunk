@@ -47,6 +47,7 @@ func TestTunkCIMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	call(context.Background(), t, gitPath, "--version")
 
 	tcs := []ciModeTestCase{
 		{

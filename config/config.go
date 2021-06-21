@@ -9,22 +9,24 @@ import (
 )
 
 type Config struct {
-	InCI           bool       `json:"in_ci,omitempty"`
-	Debug          bool       `json:"debug,omitempty"`
-	Dryrun         bool       `json:"dryrun,omitempty"`
-	Quiet          bool       `json:"quiet,omitempty"`
-	All            bool       `json:"all,omitempty"`
-	Scope          string     `json:"scope,omitempty"`
-	Commit         string     `json:"commit,omitempty"`
-	Major          bool       `json:"major,omitempty"`
-	Minor          bool       `json:"minor,omitempty"`
-	Patch          bool       `json:"patch,omitempty"`
-	Branches       []string   `json:"branches,omitempty"`
-	ReleaseScopes  []string   `json:"release_scopes,omitempty"`
-	Policies       []string   `json:"policies,omitempty"`
-	CustomPolicies []Policy   `json:"custom_policies,omitempty"`
-	TagTemplate    string     `json:"tag_template,omitempty"`
-	Term           TerminalIO `json:"-"`
+	InCI            bool       `json:"in_ci,omitempty"`
+	Debug           bool       `json:"debug,omitempty"`
+	Dryrun          bool       `json:"dryrun,omitempty"`
+	Quiet           bool       `json:"quiet,omitempty"`
+	All             bool       `json:"all,omitempty"`
+	Scope           string     `json:"scope,omitempty"`
+	Commit          string     `json:"commit,omitempty"`
+	Major           bool       `json:"major,omitempty"`
+	Minor           bool       `json:"minor,omitempty"`
+	Patch           bool       `json:"patch,omitempty"`
+	Branches        []string   `json:"branches,omitempty"`
+	ReleaseScopes   []string   `json:"release_scopes,omitempty"`
+	Policies        []string   `json:"policies,omitempty"`
+	CustomPolicies  []Policy   `json:"custom_policies,omitempty"`
+	TagTemplate     string     `json:"tag_template,omitempty"`
+	LogTemplatePath string     `json:"log_template,omitempty"`
+	NoEdit          bool       `json:"no_edit,omitempty"`
+	Term            TerminalIO `json:"-"`
 
 	// IgnorePolicies ignores policy restrictions. Intended for testing only.
 	IgnorePolicies bool `json:"-"`

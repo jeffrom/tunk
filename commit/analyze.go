@@ -33,7 +33,6 @@ func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 	var versions []*Version
 
 	// TODO in CI, fetch the main branch. locally, don't fetch.
-
 	mainBranch, err := a.vcs.GetMainBranch(ctx, a.cfg.GetBranches())
 	if err != nil {
 		return nil, err
@@ -186,9 +185,9 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		return nil, nil
 	}
 
-	var acs []*analyzedCommit
-	var maxCommit *analyzedCommit
-	var latestCommit *analyzedCommit
+	var acs []*AnalyzedCommit
+	var maxCommit *AnalyzedCommit
+	var latestCommit *AnalyzedCommit
 	for _, commit := range commits {
 		a.cfg.Debugf("%s (%s) -> %s", commit.ID[:8], commit.Author, commit.Subject)
 		ac, err := a.processCommit(commit)
@@ -197,16 +196,16 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		}
 		// fmt.Println("sup", ac.scope, scope, ac.isScoped(scope, allScopes), allScopes)
 		if !ac.isScoped(scope, allScopes) {
-			a.cfg.Debugf("skipping out of scope commit %s (scope: %q, commit scope: %q)", commit.ShortID(), scope, ac.scope)
+			a.cfg.Debugf("skipping out of scope commit %s (scope: %q, commit scope: %q)", commit.ShortID(), scope, ac.Scope)
 			continue
 		}
 
 		if maxCommit == nil {
 			maxCommit = ac
-		} else if ac.releaseType > maxCommit.releaseType {
+		} else if ac.ReleaseType > maxCommit.ReleaseType {
 			maxCommit = ac
 		}
-		if latestCommit == nil || ac.commit.CommitterDate.After(latestCommit.commit.CommitterDate) {
+		if latestCommit == nil || ac.Commit.CommitterDate.After(latestCommit.Commit.CommitterDate) {
 			latestCommit = ac
 		}
 
@@ -217,11 +216,11 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		return nil, nil
 	}
 
-	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.commit.ShortID(), maxCommit.releaseType, maxCommit.scope, latestCommit.commit.ShortID())
+	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.Commit.ShortID(), maxCommit.ReleaseType, maxCommit.Scope, latestCommit.Commit.ShortID())
 	nextVersion := latest
-	if maxCommit.releaseType >= ReleasePatch {
-		a.cfg.Debugf("%s: will bump %s version (scope: %q)", latestCommit.commit.ShortID(), maxCommit.releaseType, scope)
-		switch maxCommit.releaseType {
+	if maxCommit.ReleaseType >= ReleasePatch {
+		a.cfg.Debugf("%s: will bump %s version (scope: %q)", latestCommit.Commit.ShortID(), maxCommit.ReleaseType, scope)
+		switch maxCommit.ReleaseType {
 		case ReleaseMajor:
 			nextVersion.Major++
 			nextVersion.Minor = 0
@@ -234,16 +233,17 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		}
 
 		v := &Version{
-			Commit:  latestCommit.commit.ID,
-			Version: nextVersion,
-			Scope:   scope,
+			Commit:     latestCommit.Commit.ID,
+			Version:    nextVersion,
+			Scope:      scope,
+			AllCommits: acs,
 		}
 		return v, nil
 	}
 	return nil, nil
 }
 
-func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) {
+func (a *Analyzer) processCommit(commit *model.Commit) (*AnalyzedCommit, error) {
 	for _, pol := range a.cfg.GetPolicies() {
 		subjectRE := pol.GetSubjectRE()
 		var subjectMatch []string
@@ -254,7 +254,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 
 		typeMatch := false
 		if len(subjectMatch) > 0 {
-			ac := &analyzedCommit{commit: commit, policy: pol, valid: true}
+			ac := &AnalyzedCommit{Commit: commit, Policy: pol, Valid: true}
 			for i, subexp := range subjectRE.SubexpNames() {
 				group := subjectMatch[i]
 				switch subexp {
@@ -264,18 +264,18 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 					if pol.CommitTypes != nil {
 						rt, ok := pol.CommitTypes[commitType]
 						if ok {
-							ac.releaseType = ReleaseTypeFromString(rt)
+							ac.ReleaseType = ReleaseTypeFromString(rt)
 							typeMatch = true
 						}
 					}
 				case "scope":
 					a.cfg.Debugf("%s: policy %q subject scope: %q", commit.ShortID(), pol.Name, group)
-					ac.scope = strings.Trim(group, "~!@#$%^&*()_+`-=[]\\{}|';:\",./<>?")
+					ac.Scope = strings.Trim(group, "~!@#$%^&*()_+`-=[]\\{}|';:\",./<>?")
 				}
 			}
 
-			if ac.scope != "" && ac.releaseType == 0 && pol.FallbackReleaseType != "" {
-				ac.releaseType = ReleaseTypeFromString(pol.FallbackReleaseType)
+			if ac.Scope != "" && ac.ReleaseType == 0 && pol.FallbackReleaseType != "" {
+				ac.ReleaseType = ReleaseTypeFromString(pol.FallbackReleaseType)
 				typeMatch = true
 			}
 
@@ -285,34 +285,34 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*analyzedCommit, error) 
 					return nil, err
 				}
 				if breaking {
-					ac.releaseType = ReleaseMajor
+					ac.ReleaseType = ReleaseMajor
 				}
 
-				a.cfg.Debugf("policy match: %q (%s)", pol.Name, ac.releaseType)
+				a.cfg.Debugf("policy match: %q (%s)", pol.Name, ac.ReleaseType)
 				return ac, nil
 			}
 		}
 
 		if !typeMatch && pol.FallbackReleaseType != "" {
-			ac := &analyzedCommit{commit: commit, policy: pol, valid: false, releaseType: ReleaseTypeFromString(pol.FallbackReleaseType)}
-			a.cfg.Debugf("policy fallback: %q (%s)", pol.Name, ac.releaseType)
+			ac := &AnalyzedCommit{Commit: commit, Policy: pol, Valid: false, ReleaseType: ReleaseTypeFromString(pol.FallbackReleaseType)}
+			a.cfg.Debugf("policy fallback: %q (%s)", pol.Name, ac.ReleaseType)
 			return ac, nil
 		}
 	}
 	return nil, ErrNoPolicy
 }
 
-func (a *Analyzer) detectBreakingChange(pol *config.Policy, ac *analyzedCommit) (bool, error) {
-	if ac.annotations == nil {
-		annotations, err := a.getBodyAnnotations(pol, ac.commit.Body)
+func (a *Analyzer) detectBreakingChange(pol *config.Policy, ac *AnalyzedCommit) (bool, error) {
+	if ac.Annotations == nil {
+		annotations, err := a.getBodyAnnotations(pol, ac.Commit.Body)
 		if err != nil {
 			return false, err
 		}
-		ac.annotations = annotations
+		ac.Annotations = annotations
 	}
-	for _, annotation := range ac.annotations {
+	for _, annotation := range ac.Annotations {
 		for _, bcn := range pol.BreakingChangeTypes {
-			if annotation.name == bcn {
+			if annotation.Name == bcn {
 				return true, nil
 			}
 		}
@@ -320,7 +320,7 @@ func (a *Analyzer) detectBreakingChange(pol *config.Policy, ac *analyzedCommit) 
 	return false, nil
 }
 
-func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAnnotation, error) {
+func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]BodyAnnotation, error) {
 	bodyRE := pol.GetBodyAnnotationRE()
 	if bodyRE == nil {
 		return nil, nil
@@ -329,7 +329,7 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAn
 	var inAnnotation bool
 	var curr strings.Builder
 	var currName string
-	var annotations []bodyAnnotation
+	var annotations []BodyAnnotation
 	lines := strings.Split(body, "\n")
 	for _, line := range lines {
 		match := bodyRE.FindStringSubmatch(line)
@@ -344,7 +344,7 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAn
 		} else {
 			body := strings.TrimRight(curr.String(), "\n")
 			if body != "" {
-				annotations = append(annotations, bodyAnnotation{name: currName, body: body})
+				annotations = append(annotations, BodyAnnotation{Name: currName, Body: body})
 			}
 			curr = strings.Builder{}
 			currName = ""
@@ -366,7 +366,7 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]bodyAn
 	}
 
 	if body := curr.String(); body != "" && currName != "" {
-		annotations = append(annotations, bodyAnnotation{name: currName, body: strings.TrimRight(curr.String(), "\n")})
+		annotations = append(annotations, BodyAnnotation{Name: currName, Body: strings.TrimRight(curr.String(), "\n")})
 	}
 	return annotations, nil
 }
@@ -413,17 +413,17 @@ func buildTagPrefix(scope string) string {
 	return scope + "/v"
 }
 
-type analyzedCommit struct {
-	commit      *model.Commit
-	releaseType ReleaseType
-	scope       string
-	policy      *config.Policy
-	valid       bool
-	annotations []bodyAnnotation
+type AnalyzedCommit struct {
+	*model.Commit
+	ReleaseType ReleaseType
+	Scope       string
+	Policy      *config.Policy
+	Valid       bool
+	Annotations []BodyAnnotation
 }
 
-func (ac *analyzedCommit) isScoped(scope string, allScopes []string) bool {
-	if ac.scope == "" {
+func (ac *AnalyzedCommit) isScoped(scope string, allScopes []string) bool {
+	if ac.Scope == "" {
 		for _, other := range allScopes {
 			if scope == other {
 				return false
@@ -432,12 +432,12 @@ func (ac *analyzedCommit) isScoped(scope string, allScopes []string) bool {
 		return true
 	}
 	if len(allScopes) > 0 {
-		return scope == ac.scope
+		return scope == ac.Scope
 	}
 	return true
 }
 
-type bodyAnnotation struct {
-	name string
-	body string
+type BodyAnnotation struct {
+	Name string
+	Body string
 }

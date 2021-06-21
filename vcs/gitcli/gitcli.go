@@ -15,6 +15,7 @@ import (
 	"github.com/jeffrom/tunk/config"
 	"github.com/jeffrom/tunk/model"
 	"github.com/jeffrom/tunk/vcs"
+	"github.com/mattn/go-isatty"
 )
 
 // Git implements vcs.Interface using the git commandline tool.
@@ -220,19 +221,41 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 		}
 	}
 
+	tmpfile, err := ioutil.TempFile("", "tunk-shortlog")
+	if err != nil {
+		return err
+	}
+	defer tmpfile.Close()
+	defer os.RemoveAll(tmpfile.Name())
+	if _, err := tmpfile.Write([]byte(opts.Message)); err != nil {
+		return err
+	}
+
 	args := []string{
 		"tag", "-a", tag,
 	}
 	if commit != "" {
 		args = append(args, commit)
 	}
-	args = append(args, "-m", opts.Message)
+	stdoutfd := os.Stdout.Fd()
+	istty := isatty.IsTerminal(stdoutfd)
+	if !g.cfg.InCI && !g.cfg.NoEdit && istty {
+		args = append(args, "-e")
+	}
+	args = append(args, "-F", tmpfile.Name())
 
 	if g.cfg.Dryrun {
 		g.cfg.Printf("+ git %s (dryrun)", ArgsString(args))
 		return nil
 	}
-	_, err := g.call(ctx, args)
+	cmd := CommandContext(ctx, "git", args...)
+	cmd.Dir = g.wd
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return err
 }
 

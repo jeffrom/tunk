@@ -68,7 +68,16 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 		if err != nil {
 			return err
 		}
-		r.cfg.Printf("creating tag %q for commit %s", tag, ver.ShortCommit())
+		r.cfg.Printf("creating tag %q for commit %s...", tag, ver.ShortCommit())
+
+		b := &bytes.Buffer{}
+		if err := r.shortlog(ctx, b, ver); err != nil {
+			return err
+		}
+		shortlog := b.String()
+		opts.Message = shortlog
+		r.cfg.Debugf("shortlog:\n\n---\n%s", shortlog)
+
 		if err := r.vcs.CreateTag(ctx, ver.Commit, tag, opts); err != nil {
 			return err
 		}

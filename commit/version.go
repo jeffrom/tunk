@@ -4,14 +4,12 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
-
-	"github.com/jeffrom/tunk/model"
 )
 
 type Version struct {
-	Scope      string          `json:"scope,omitempty"`
-	AllCommits []*model.Commit `json:"all_commits"`
-	Commit     string          `json:"commit"`
+	Scope      string            `json:"scope,omitempty"`
+	AllCommits []*AnalyzedCommit `json:"all_commits"`
+	Commit     string            `json:"commit"`
 	Version    semver.Version
 	RC         string
 }

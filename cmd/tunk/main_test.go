@@ -43,6 +43,7 @@ func TestTunkDefaultMode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	call(context.Background(), t, gitPath, "--version")
 
 	validRoot := Path("testdata/valid")
 	validDirs, err := ioutil.ReadDir(validRoot)
