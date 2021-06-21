@@ -18,9 +18,10 @@ import (
 
 // Git implements vcs.Interface using the git commandline tool.
 type Git struct {
-	cfg     config.Config
-	wd      string
-	askpass string
+	cfg            config.Config
+	wd             string
+	askpass        string
+	askpassCleanup func()
 }
 
 func New(cfg config.Config, wd string) *Git {
@@ -77,6 +78,9 @@ func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts)
 	// }
 
 	args := []string{"push"}
+	if opts.Tags {
+		args = append(args, "--tags")
+	}
 	if opts.FollowTags {
 		args = append(args, "--follow-tags")
 	}
@@ -85,10 +89,12 @@ func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts)
 	}
 	args = append(args, upstream, ref)
 
+	argsStr := ArgsString(args)
 	if g.cfg.Dryrun {
-		g.cfg.Printf("+ git %s (dryrun)", ArgsString(args))
+		g.cfg.Printf("+ git %s (dryrun)", argsStr)
 		return nil
 	}
+	g.cfg.Printf("+ git %s", argsStr)
 	_, err := g.call(ctx, args)
 	return err
 }
@@ -233,8 +239,8 @@ func (g *Git) ReadTags(ctx context.Context, query string) ([]string, error) {
 }
 
 func (g *Git) setAuthor(ctx context.Context, author, email string) error {
-	userArgs := []string{"config", "user.name", author}
-	emailArgs := []string{"config", "user.email", email}
+	userArgs := []string{"config", "--local", "user.name", author}
+	emailArgs := []string{"config", "--local", "user.email", email}
 	if g.cfg.Dryrun {
 		g.cfg.Printf("+ git %s (dryrun)", ArgsString(userArgs))
 		g.cfg.Printf("+ git %s (dryrun)", ArgsString(emailArgs))
@@ -250,30 +256,61 @@ func (g *Git) setAuthor(ctx context.Context, author, email string) error {
 }
 
 func (g *Git) setupAskpass() error {
-	if g.askpass != "" {
+	if g.askpass != "" || !g.cfg.InCI {
 		return nil
 	}
 	token := getenv("GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN")
 	if token == "" {
 		return errors.New("gitcli tag: GIT_TOKEN, GITHUB_TOKEN, or GH_TOKEN is required for CI mode")
 	}
-	f, err := ioutil.TempFile("", "tunk")
+
+	// TODO cleanup
+	askpass, cleanup, err := SetupCreds()
 	if err != nil {
 		return err
 	}
+
+	g.askpass = askpass
+	g.askpassCleanup = cleanup
+	return nil
+}
+
+func (g *Git) Cleanup() error {
+	if g.askpassCleanup != nil {
+		g.askpassCleanup()
+	}
+	return nil
+}
+
+func noop() {}
+
+func SetupCreds() (string, func(), error) {
+	token := getenv("GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN")
+	f, err := ioutil.TempFile("", "tunk")
+	if err != nil {
+		return "", noop, err
+	}
 	defer f.Close()
 
-	b := []byte(fmt.Sprintf(`echo "%s"`, token))
+	var storeBuilder strings.Builder
+	storeBuilder.WriteString(`echo "`)
+	if token != "" {
+		storeBuilder.WriteString(token)
+	}
+	storeBuilder.WriteString(`"`)
+
+	b := []byte(storeBuilder.String())
 	if _, err := f.Write(b); err != nil {
-		return err
+		return "", noop, err
 	}
 
 	if err := os.Chmod(f.Name(), 0700); err != nil {
-		return err
+		return "", noop, err
 	}
 
-	g.askpass = f.Name()
-	return nil
+	return f.Name(), func() {
+		os.Remove(f.Name())
+	}, nil
 }
 
 // func (g *Git) setUpstream(ctx context.Context, upstream, repoName, remoteName, user, token string) error {

@@ -86,7 +86,9 @@ func run(rawArgs []string) error {
 		rc = args[0]
 	}
 
-	rnr := runner.New(cfg, gitcli.New(cfg, ""))
+	git := gitcli.New(cfg, "")
+	defer git.Cleanup()
+	rnr := runner.New(cfg, git)
 	ctx := context.Background()
 	if err := rnr.Check(ctx, rc); err != nil {
 		return err

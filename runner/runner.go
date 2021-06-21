@@ -54,9 +54,9 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 }
 
 func (r *Runner) PushTags(ctx context.Context) error {
-	// if err := r.vcs.Push(ctx, "origin", r.cfg. {
-
-	// }
+	if err := r.vcs.Push(ctx, "origin", "master", vcs.PushOpts{FollowTags: true}); err != nil {
+		return err
+	}
 	return nil
 }
 

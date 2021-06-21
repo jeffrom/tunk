@@ -30,7 +30,7 @@ test.race:
 
 .PHONY: test.lint
 test.lint: $(staticcheck)
-	GO111MODULE=on $(staticcheck) -f stylish -checks all ./...
+	GO111MODULE=on $(staticcheck) -checks all ./...
 
 .PHONY: test.cover
 test.cover: $(gocoverutil)

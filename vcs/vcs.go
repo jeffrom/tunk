@@ -33,7 +33,6 @@ type TagOpts struct {
 }
 
 type PushOpts struct {
-	FollowTags  bool
-	GithubUser  string
-	GithubToken string
+	Tags       bool
+	FollowTags bool
 }

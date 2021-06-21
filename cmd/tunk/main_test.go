@@ -18,6 +18,8 @@ import (
 	"github.com/jeffrom/tunk/vcs/gitcli"
 )
 
+var goldenEnv = os.Getenv("GOLDEN")
+
 type testOperation struct {
 	Commit   string   `json:"commit,omitempty"`
 	Tag      string   `json:"tag,omitempty"`
@@ -117,17 +119,10 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 			runOp(ctx, t, *testop)
 		}
 
-		logOut, err := exec.CommandContext(ctx,
-			"git", "log", "--graph",
-			"--pretty=format:%d %s",
-			"--abbrev-commit",
-		).Output()
-		if err != nil {
-			t.Fatal(err)
-		}
+		logOut := goldenGitLog(ctx, t)
 
 		goldenPath := filepath.Join(tc.dir, "expect")
-		if env := os.Getenv("GOLDEN"); env != "" {
+		if env := goldenEnv; env != "" {
 			t.Logf("Writing golden file at %s", goldenPath)
 			die(ioutil.WriteFile(goldenPath, logOut, 0644))
 			return
@@ -147,6 +142,17 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 		}
 
 	}
+}
+
+func goldenGitLog(ctx context.Context, t testing.TB) []byte {
+	t.Helper()
+	logOut, err := exec.CommandContext(ctx,
+		"git", "log", "--graph",
+		"--pretty=format:%d %s",
+		"--abbrev-commit",
+	).Output()
+	die(err)
+	return logOut
 }
 
 func runOp(ctx context.Context, t *testing.T, testop testOperation) {
@@ -200,6 +206,15 @@ func findGoMod() (string, error) {
 func call(ctx context.Context, t *testing.T, arg string, args ...string) {
 	t.Helper()
 	t.Logf("+ %s %s", arg, gitcli.ArgsString(args))
+
+	var askpass string
+	if arg == "git" {
+		ap, cleanup, err := gitcli.SetupCreds()
+		die(err)
+		defer cleanup()
+		askpass = ap
+	}
+
 	cmd := exec.CommandContext(ctx, arg, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -209,6 +224,7 @@ func call(ctx context.Context, t *testing.T, arg string, args ...string) {
 			"GIT_AUTHOR_EMAIL=tunk-test@example.com",
 			"GIT_COMMITTER_NAME=tunk-test",
 			"GIT_COMMITTER_EMAIL=tunk-test@example.com",
+			fmt.Sprintf("GIT_ASKPASS=%s", askpass),
 		}
 		switch args[0] {
 		case "config":

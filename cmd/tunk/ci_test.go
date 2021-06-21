@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -9,11 +11,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/sosedoff/gitkit"
 )
+
+var ciSourceDir = Path("testdata/ci_mode")
 
 type ciModeTestCase struct {
 	name    string
@@ -30,6 +35,10 @@ func TestTunkCIMode(t *testing.T) {
 	if testing.Short() {
 		t.Skip("-short")
 	}
+	if runtime.GOOS == "windows" {
+		t.Skip("windows not supported (gitkit uses syscall.Kill)")
+	}
+
 	gitPath, err := exec.LookPath("git")
 	if err != nil {
 		t.Fatal(err)
@@ -39,6 +48,7 @@ func TestTunkCIMode(t *testing.T) {
 		{
 			gitPath: gitPath,
 			name:    "basic",
+			passwd:  "coolpass",
 			ops: []testOperation{
 				{Commit: "initial commit"},
 				{Tag: "v0.1.0"},
@@ -46,7 +56,7 @@ func TestTunkCIMode(t *testing.T) {
 				{GitArgs: strs("push", "origin", "master")},
 				{TunkArgs: strs("--ci")},
 			},
-			environ: strs("GIT_TOKEN=abc123"),
+			environ: strs("GIT_TOKEN=coolpass"),
 		},
 	}
 
@@ -99,6 +109,31 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 
 		for _, op := range tc.ops {
 			runOp(ctx, t, op)
+		}
+
+		// check results in "remote"
+		die(os.Chdir(filepath.Join(srv.dir, "myrepo.git")))
+		logOut := goldenGitLog(ctx, t)
+		goldenPath := filepath.Join(ciSourceDir, tc.name, "expect")
+		if env := goldenEnv; env != "" {
+			t.Logf("Writing golden file at %s", goldenPath)
+			dir, _ := filepath.Split(filepath.Clean(goldenPath))
+			die(os.MkdirAll(dir, 0755))
+			die(ioutil.WriteFile(goldenPath, logOut, 0644))
+			return
+		}
+
+		// compare goldenfile to output
+		expectb, err := ioutil.ReadFile(goldenPath)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("No goldenfile at %s. Create one by rerunning with GOLDEN=1", goldenPath)
+			}
+			die(err)
+		}
+
+		if !bytes.Equal(expectb, logOut) {
+			t.Fatalf("golden file didn't match. Either fix, or run: GOLDEN=1 go test on this test\n\nexpected:\n\n%s\n\ngot:\n\n%s", string(expectb), string(logOut))
 		}
 	}
 }
@@ -171,6 +206,7 @@ func (g *gitServer) stop(t *testing.T) {
 	g.http.Close()
 	if t.Failed() {
 		t.Logf("Test failed so leaving tmpdir in place: %s", g.dir)
+		return
 	}
 	os.RemoveAll(g.dir)
 }
