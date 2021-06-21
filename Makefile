@@ -33,6 +33,7 @@ test.race:
 test.lint: $(staticcheck)
 	GO111MODULE=on $(staticcheck) -checks all ./...
 	go vet ./...
+	semgrep --error -c r/dgryski.semgrep-go -c p/gosec -c p/golang
 
 .PHONY: test.cover
 test.cover: $(gocoverutil)
