@@ -220,8 +220,8 @@ func newGitServer(passwd string, cfg *gitkit.Config) *gitServer {
 			AutoCreate: true,
 			AutoHooks:  true,
 			Auth:       auth,
-			Hooks: map[string][]byte{
-				"pre-receive": []byte(`echo "pre-receive"`),
+			Hooks: &gitkit.HookScripts{
+				PreReceive: `echo "pre-receive"`,
 			},
 		}
 	}
