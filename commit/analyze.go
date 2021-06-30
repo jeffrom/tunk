@@ -206,20 +206,9 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	}
 
 	a.cfg.Debugf("analyzed: max: %s %s(%q) latest: %s\n", maxCommit.Commit.ShortID(), maxCommit.ReleaseType, maxCommit.Scope, latestCommit.Commit.ShortID())
-	nextVersion := latest
 	if maxCommit.ReleaseType >= ReleasePatch {
 		a.cfg.Debugf("%s: will bump %s version (scope: %q)", latestCommit.Commit.ShortID(), maxCommit.ReleaseType, scope)
-		switch maxCommit.ReleaseType {
-		case ReleaseMajor:
-			nextVersion.Major++
-			nextVersion.Minor = 0
-			nextVersion.Patch = 0
-		case ReleaseMinor:
-			nextVersion.Minor++
-			nextVersion.Patch = 0
-		case ReleasePatch:
-			nextVersion.Patch++
-		}
+		nextVersion := bumpVersion(latest, maxCommit.ReleaseType)
 
 		v := &Version{
 			Commit:     latestCommit.Commit.ID,
@@ -386,6 +375,23 @@ func (a *Analyzer) buildLatestRCTag(scope, rc string, tags []string) string {
 		max = nums[len(nums)-1] + 1
 	}
 	return fmt.Sprintf("%s.%d", rc, max)
+}
+
+func bumpVersion(curr semver.Version, releaseType ReleaseType) semver.Version {
+	nextVersion := curr
+	switch releaseType {
+	case ReleaseMajor:
+		nextVersion.Major++
+		nextVersion.Minor = 0
+		nextVersion.Patch = 0
+	case ReleaseMinor:
+		nextVersion.Minor++
+		nextVersion.Patch = 0
+	case ReleasePatch:
+		nextVersion.Patch++
+	}
+
+	return nextVersion
 }
 
 func buildTagQuery(scope string) string {
