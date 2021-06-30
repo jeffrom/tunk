@@ -87,6 +87,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	if err != nil {
 		return nil, err
 	}
+	// fmt.Println("the tags:", tags)
 	latest, err := semverLatest(tags, scope, "")
 	if err != nil {
 		if errors.Is(err, ErrNoTags) {
@@ -98,8 +99,10 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		}
 		return nil, err
 	}
+	// fmt.Println("latest:", latest)
 
 	// handle overrides
+	// TODO do this later so we can provide more context in the return struct
 	if a.cfg.Major {
 		nextVer := latest
 		nextVer.Major++
@@ -119,24 +122,10 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		return &Version{Version: nextVer}, nil
 	}
 
-	var latestRC semver.Version
-	var rcFound bool
-	if rc != "" {
-		latestRC, err = semverLatest(tags, scope, rc)
-		rcFound = err == nil
-		if err != nil {
-			if !errors.Is(err, ErrNoTags) {
-				return nil, err
-			}
-		}
-	}
+	// fmt.Println("current latest version is:", latestVer)
+	// fmt.Println("version to start analysis from:", latest)
 
-	latestVer := latest
-	if rc != "" && rcFound && latestRC.GT(latest) {
-		latestVer = latestRC
-	}
-
-	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latestVer, scope, ""))
+	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latest, scope, ""))
 	a.cfg.Debugf("log: %q", logQuery)
 	commits, err := a.vcs.ReadCommits(ctx, logQuery)
 	if err != nil {
@@ -403,7 +392,7 @@ func buildTagQuery(scope string) string {
 	if scope == "" {
 		return "v*"
 	}
-	return scope + "/*"
+	return scope + "/v*"
 }
 
 func buildTagPrefix(scope string) string {

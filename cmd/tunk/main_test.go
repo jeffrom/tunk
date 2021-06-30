@@ -25,7 +25,7 @@ type testOperation struct {
 	Tag        string   `json:"tag,omitempty"`
 	TunkArgs   []string `json:"tunk,omitempty"`
 	GitArgs    []string `json:"git,omitempty"`
-	ShouldFail bool
+	ShouldFail bool     `json:"should_fail,omitempty"`
 }
 
 type defaultModeTestCase struct {
@@ -132,7 +132,9 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 		}
 
 		if !bytes.Equal(expectb, logOut) {
-			t.Fatalf("golden file didn't match. Either fix, or run: GOLDEN=1 go test on this test\n\nexpected:\n\n%s\n\ngot:\n\n%s", string(expectb), string(logOut))
+			// t.Fatalf("golden file didn't match. Either fix, or run: GOLDEN=1 go test on this test\n\nexpected:\n\n%s\n\ngot:\n\n%s", string(expectb), string(logOut))
+			logDiff(t, expectb, logOut)
+			t.Fatal("golden file didn't match. Either fix, or run: GOLDEN=1 go test on this test")
 		}
 
 	}
@@ -274,4 +276,34 @@ func cleanupTempdir(t testing.TB, p string) {
 	}
 	t.Logf("Removing tempdir %s", p)
 	os.RemoveAll(p)
+}
+
+func logDiff(t testing.TB, expect, got []byte) {
+	t.Helper()
+	expectf, err := ioutil.TempFile("", "tunk-diff")
+	die(err)
+	defer expectf.Close()
+	gotf, err := ioutil.TempFile("", "tunk-diff")
+	die(err)
+	defer expectf.Close()
+
+	_, err = expectf.Write(expect)
+	die(err)
+	die(expectf.Close())
+	_, err = gotf.Write(got)
+	die(err)
+	die(gotf.Close())
+
+	args := []string{"diff", "--no-index", "--", expectf.Name(), gotf.Name()}
+	t.Logf("+ git %s", gitcli.ArgsString(args))
+	cmd := exec.Command("git", args...)
+	cmd.Stderr = os.Stderr
+	out, err := cmd.Output()
+	if err == nil {
+		panic("expected error from git diff but got none")
+	}
+	out = bytes.ReplaceAll(out, []byte(expectf.Name()), []byte("/expect"))
+	out = bytes.ReplaceAll(out, []byte(gotf.Name()), []byte("/got"))
+
+	t.Logf("diff:\n\n%s", string(out))
 }

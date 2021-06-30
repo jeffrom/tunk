@@ -1,0 +1,13 @@
+*  (HEAD -> master, tag: v1.0.1-rc.0) k
+*  (tag: v1.0.0) perf: j
+*  feat: i
+*  (tag: v1.0.0-rc.1) perf: h
+*  revert: g
+*  (tag: v1.0.0-rc.0) feat: g
+*  cont: f
+*  (tag: v0.2.0-rc.1) perf: e
+*  revert: d
+*  (tag: v0.2.0-rc.0) fix: c
+*  feat: b
+*  (tag: v0.1.1) fix: a
+*  (tag: v0.1.0) initial commit
