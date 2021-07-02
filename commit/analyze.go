@@ -113,27 +113,6 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	}
 	// fmt.Println("latest:", latest)
 
-	// handle overrides
-	// TODO do this later so we can provide more context in the return struct
-	if a.cfg.Major {
-		nextVer := latest
-		nextVer.Major++
-		nextVer.Minor = 0
-		nextVer.Patch = 0
-		return &Version{Version: nextVer}, nil
-	}
-	if a.cfg.Minor {
-		nextVer := latest
-		nextVer.Minor++
-		nextVer.Patch = 0
-		return &Version{Version: nextVer}, nil
-	}
-	if a.cfg.Patch {
-		nextVer := latest
-		nextVer.Patch++
-		return &Version{Version: nextVer}, nil
-	}
-
 	// fmt.Println("current latest version is:", latestVer)
 	// fmt.Println("version to start analysis from:", latest)
 
@@ -169,6 +148,30 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		ver.Version.Pre = pre
 		// fmt.Printf("should be %q, got %q\n", a.buildLatestRCTag(scope, rc, tags), pre)
 	}
+
+	// handle overrides
+	if a.cfg.Major {
+		nextVer := latest
+		nextVer.Major++
+		nextVer.Minor = 0
+		nextVer.Patch = 0
+		ver.Version = nextVer
+		return ver, nil
+	}
+	if a.cfg.Minor {
+		nextVer := latest
+		nextVer.Minor++
+		nextVer.Patch = 0
+		ver.Version = nextVer
+		return ver, nil
+	}
+	if a.cfg.Patch {
+		nextVer := latest
+		nextVer.Patch++
+		ver.Version = nextVer
+		return ver, nil
+	}
+
 	return ver, nil
 }
 
