@@ -32,6 +32,7 @@ func New(cfg config.Config, vcs vcs.Interface) (*Runner, error) {
 	}, nil
 }
 
+// Check checks initial requirements for release, such as being on the right branch.
 func (r *Runner) Check(ctx context.Context, rc string) error {
 	if r.mainBranch == "" {
 		branches := r.cfg.Branches
@@ -57,7 +58,7 @@ func (r *Runner) Check(ctx context.Context, rc string) error {
 		return err
 	}
 	if currBranch != r.mainBranch && !r.cfg.Dryrun {
-		return fmt.Errorf("commit must be on branch %s, not %s", r.mainBranch, currBranch)
+		return wrongBranchError{mainBranch: r.mainBranch, branch: currBranch}
 	}
 	return nil
 }
@@ -99,4 +100,18 @@ func (r *Runner) PushTags(ctx context.Context) error {
 
 func RenderTag(cfg config.Config, t *commit.Tag, ver *commit.Version) (string, error) {
 	return t.ExecuteString(commit.TagData{Version: ver})
+}
+
+type wrongBranchError struct {
+	mainBranch string
+	branch     string
+}
+
+func (e wrongBranchError) Error() string {
+	return fmt.Sprintf("commit must be on branch %s, not %s", e.mainBranch, e.branch)
+}
+
+func isWrongBranchError(err error) bool {
+	_, ok := err.(wrongBranchError)
+	return ok
 }

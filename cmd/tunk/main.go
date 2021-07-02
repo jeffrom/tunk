@@ -35,6 +35,8 @@ func run(rawArgs []string) error {
 	var version bool
 	var cfgFile string
 	var noPolicy bool
+	var checkCommits []string
+	var checkCommitsFromGit bool
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -50,8 +52,12 @@ func run(rawArgs []string) error {
 	flags.StringVar(&cfg.LogTemplatePath, "shortlog-template", "", "path to custom go/text template to generate shortlog")
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "release-scope", nil, "declare release scopes")
+	flags.StringArrayVar(&cfg.AllowedScopes, "allowed-scope", nil, "declare allowed scopes")
+	flags.StringArrayVar(&cfg.AllowedTypes, "allowed-type", nil, "declare allowed commit types")
 	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies")
 	flags.BoolVarP(&noPolicy, "no-policy", "P", false, "disable all commit policies")
+	flags.StringArrayVarP(&checkCommits, "check-commit", "C", nil, "only validate commits")
+	flags.BoolVar(&checkCommitsFromGit, "check-commits", false, "only validate commits using git log")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
@@ -103,6 +109,7 @@ func run(rawArgs []string) error {
 	if err := cfg.Validate(); err != nil {
 		return err
 	}
+	// done setting up config
 
 	var rc string
 	if len(args) > 0 {
@@ -116,6 +123,31 @@ func run(rawArgs []string) error {
 		return err
 	}
 	ctx := context.Background()
+
+	shouldCheckCommits := checkCommitsFromGit || flags.Lookup("check-commit").Changed
+	if shouldCheckCommits {
+		hasPipe := !isatty.IsTerminal(os.Stdin.Fd())
+		var err error
+		if checkCommitsFromGit {
+			err = rnr.CheckCommitsFromGit(ctx)
+		} else if hasPipe {
+			err = rnr.CheckReadCommits(ctx, os.Stdin)
+		} else {
+			err = rnr.CheckCommitSubjects(ctx, checkCommits)
+		}
+		if err != nil {
+			cf := runner.CheckFailure{}
+			if errors.As(err, &cf) {
+				if err := cf.WriteFailure(os.Stdout); err != nil {
+					fmt.Fprintln(os.Stderr, "failed to write invalid commit information:", err)
+				}
+			}
+			return err
+		}
+		cfg.Printf("OK")
+		return nil
+	}
+
 	if err := rnr.Check(ctx, rc); err != nil {
 		return err
 	}

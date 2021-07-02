@@ -27,6 +27,8 @@ type Config struct {
 	TagTemplate     string     `json:"tag_template,omitempty"`
 	LogTemplatePath string     `json:"log_template,omitempty"`
 	NoEdit          bool       `json:"no_edit,omitempty"`
+	AllowedScopes   []string   `json:"allowed_scopes,omitempty"`
+	AllowedTypes    []string   `json:"allowed_types,omitempty"`
 	Term            TerminalIO `json:"-"`
 
 	// IgnorePolicies ignores policy restrictions. Intended for testing only.

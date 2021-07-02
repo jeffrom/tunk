@@ -89,18 +89,36 @@ func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 	return versions, nil
 }
 
-func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version, error) {
-	glob, err := a.tag.Glob(scope, "")
+func (a *Analyzer) LatestRelease(ctx context.Context, scope, rc string) (semver.Version, error) {
+	glob, err := a.tag.Glob(scope, rc)
 	if err != nil {
-		return nil, err
+		return semver.Version{}, err
 	}
 	// fmt.Printf("da glob: %q\n", glob)
 	tags, err := a.vcs.ReadTags(ctx, glob)
 	if err != nil {
-		return nil, err
+		return semver.Version{}, err
 	}
 	// fmt.Println("the tags:", tags)
-	latest, err := a.tag.SemverLatest(tags, scope, "")
+	latest, err := a.tag.SemverLatest(tags, scope, rc)
+	if err != nil {
+		return semver.Version{}, err
+	}
+	return latest, nil
+}
+
+func (a *Analyzer) ReadCommitsSince(ctx context.Context, scope string, latest semver.Version) ([]*model.Commit, error) {
+	q, err := a.tag.ExecuteString(TagData{Version: &Version{Version: latest, Scope: scope}})
+	if err != nil {
+		return nil, err
+	}
+	logQuery := fmt.Sprintf("%s..HEAD", q)
+	a.cfg.Debugf("log: %q", logQuery)
+	return a.vcs.ReadCommits(ctx, logQuery)
+}
+
+func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version, error) {
+	latest, err := a.LatestRelease(ctx, scope, "")
 	if err != nil {
 		if errors.Is(err, ErrNoTags) {
 			initialTag, err := a.tag.ExecuteString(TagData{Version: &Version{Version: semver.Version{Minor: 1}}})
@@ -116,13 +134,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	// fmt.Println("current latest version is:", latestVer)
 	// fmt.Println("version to start analysis from:", latest)
 
-	q, err := a.tag.ExecuteString(TagData{Version: &Version{Version: latest, Scope: scope}})
-	if err != nil {
-		return nil, err
-	}
-	logQuery := fmt.Sprintf("%s..HEAD", q)
-	a.cfg.Debugf("log: %q", logQuery)
-	commits, err := a.vcs.ReadCommits(ctx, logQuery)
+	commits, err := a.ReadCommitsSince(ctx, scope, latest)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +213,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	var latestCommit *AnalyzedCommit
 	for _, commit := range commits {
 		a.cfg.Debugf("%s (%s) -> %s", commit.ID[:8], commit.Author, commit.Subject)
-		ac, err := a.processCommit(commit)
+		ac, err := a.processCommit(commit, a.cfg.GetPolicies())
 		if err != nil {
 			if errors.Is(err, ErrNoPolicy) && a.cfg.OverridesSet() {
 				ac = &AnalyzedCommit{Commit: commit}
@@ -260,8 +272,12 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 	return nil, nil
 }
 
-func (a *Analyzer) processCommit(commit *model.Commit) (*AnalyzedCommit, error) {
-	for _, pol := range a.cfg.GetPolicies() {
+func (a *Analyzer) Match(commit *model.Commit, policies []*config.Policy) (*AnalyzedCommit, error) {
+	return a.processCommit(commit, policies)
+}
+
+func (a *Analyzer) processCommit(commit *model.Commit, policies []*config.Policy) (*AnalyzedCommit, error) {
+	for _, pol := range policies {
 		subjectRE := pol.GetSubjectRE()
 		var subjectMatch []string
 		if subjectRE != nil {
@@ -278,6 +294,7 @@ func (a *Analyzer) processCommit(commit *model.Commit) (*AnalyzedCommit, error) 
 				case "type":
 					a.cfg.Debugf("%s: policy %q subject type: %q", commit.ShortID(), pol.Name, group)
 					commitType := group
+					ac.CommitType = commitType
 					if pol.CommitTypes != nil {
 						rt, ok := pol.CommitTypes[commitType]
 						if ok {
@@ -444,7 +461,10 @@ type AnalyzedCommit struct {
 	*model.Commit
 	ReleaseType ReleaseType
 	Scope       string
+	CommitType  string
 	Policy      *config.Policy
+	// Valid, when false, indicates that the commit didn't match any policies,
+	// but there was a fallback.
 	Valid       bool
 	Annotations []BodyAnnotation
 }
