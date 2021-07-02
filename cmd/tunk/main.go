@@ -183,7 +183,8 @@ TEMPLATING
 
 Tags can be read and written according to a template. The only requirement is
 that a SemVer-compliant version is included as one continuous string, including
-the prerelease portion.
+the prerelease portion. See "go doc github.com/jeffrom/tunk/commit TagData" for
+more information.
 
 The default tag template is:
 
