@@ -60,7 +60,7 @@ tunk runs easily in continuous integration systems, either by running `tunk --ci
 
 ## configuration
 
-tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at [testdata/tunk.example.yaml](testdata/tunk.example/yaml).
+tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at [testdata/tunk.example.yaml](testdata/tunk.example.yaml).
 
 ### environment variables
 
