@@ -34,6 +34,7 @@ func run(rawArgs []string) error {
 	var help bool
 	var version bool
 	var cfgFile string
+	var noPolicy bool
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -50,6 +51,7 @@ func run(rawArgs []string) error {
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "release-scope", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies")
+	flags.BoolVar(&noPolicy, "no-policy", false, "disable all commit policies")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
@@ -95,6 +97,9 @@ func run(rawArgs []string) error {
 		}
 	}
 	cfg.BranchesSet = branchesSet
+	if noPolicy {
+		cfg.Policies = nil
+	}
 
 	var rc string
 	if len(args) > 0 {

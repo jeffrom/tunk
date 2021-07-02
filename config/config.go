@@ -123,6 +123,10 @@ func (c Config) GetPolicies() []*Policy {
 
 func (c Config) GetBranches() []string { return c.Branches }
 
+func (c Config) OverridesSet() bool {
+	return (c.Major || c.Minor || c.Patch)
+}
+
 func oneOf(s string, l []string) bool {
 	for _, cand := range l {
 		if s == cand {

@@ -12,28 +12,10 @@ $ go install github.com/jeffrom/tunk/cmd/tunk
 
 ## usage
 
-```
-tunk [rc]
+On a git repository with no tags, running `tunk` will print a message that no release tags could be found, and steps for creating one. In the default configuration, the initial tag will look like this: `v0.1.0`. Once a tag has been created, subsequent commits can be automatically tagged.
 
-A utility for creating Semantic Version-compliant tags.
+Running `tunk` on a repository with matching tags will open `$EDITOR` (or `$GIT_EDITOR`) with a summary of the commits that comprise the pending release for final edits. Once saved, a tag will be created for the current commit.
 
-FLAGS
-      --all                         operate on all scopes
-  -b, --branch stringArray          set release branches (default [main,master])
-      --ci                          Run in CI mode
-  -c, --config string               specify config file
-  -n, --dry-run                     Don't do destructive operations
-  -h, --help                        show help
-      --major                       bump major version
-      --minor                       bump minor version
-      --no-edit                     Don't edit release tag shortlogs
-      --patch                       bump patch version
-      --policy stringArray          declare commit policies (default [conventional-lax,lax])
-  -q, --quiet                       print as little as necessary
-      --release-scope stringArray   declare release scopes
-  -s, --scope string                Operate on a scope
-      --shortlog-template string    path to custom go/text template to generate shortlog
-      --template string             go text/template for tag
-  -v, --verbose                     print additional debugging info
-  -V, --version                     print version and exit
-```
+### policies
+
+### templates

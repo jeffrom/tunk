@@ -107,7 +107,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 			if err != nil {
 				return nil, err
 			}
-			a.cfg.Warning(`no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
+			a.cfg.Warning(`No release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
 		}
 		return nil, err
 	}
@@ -203,7 +203,11 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		a.cfg.Debugf("%s (%s) -> %s", commit.ID[:8], commit.Author, commit.Subject)
 		ac, err := a.processCommit(commit)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, ErrNoPolicy) && a.cfg.OverridesSet() {
+				ac = &AnalyzedCommit{Commit: commit}
+			} else {
+				return nil, err
+			}
 		}
 
 		// fmt.Println("sup", ac.scope, scope, ac.isScoped(scope, allScopes), allScopes)
@@ -240,6 +244,18 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 			AllCommits: acs,
 		}
 		return v, nil
+	} else if a.cfg.OverridesSet() {
+		relType := ReleasePatch
+		if a.cfg.Minor {
+			relType = ReleaseMinor
+		} else if a.cfg.Major {
+			relType = ReleaseMajor
+		}
+		return &Version{
+			Commit:     latestCommit.Commit.ID,
+			Version:    bumpVersion(latest, relType),
+			AllCommits: acs,
+		}, nil
 	}
 	return nil, nil
 }
