@@ -1,4 +1,3 @@
-SHELL := /bin/bash
 TMPDIR := $(if $(TMPDIR),$(TMPDIR),"/tmp/")
 GOPATH := $(shell go env GOPATH)
 
@@ -36,6 +35,7 @@ test.lint: $(staticcheck)
 	semgrep --error -c r/dgryski.semgrep-go -c p/gosec -c p/golang
 
 .PHONY: test.cover
+test.cover: SHELL:=/bin/bash
 test.cover: $(gocoverutil)
 	$(gocoverutil) -coverprofile=cov.out test -covermode=count ./... \
 		2> >(grep -v "no packages being tested depend on matches for pattern" 1>&2) \
