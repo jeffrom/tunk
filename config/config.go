@@ -91,7 +91,7 @@ func GetDefault() Config {
 func (c Config) Validate() error {
 	if (c.Major && (c.Minor || c.Patch)) ||
 		(c.Minor && (c.Patch)) {
-		return errors.New("Only one of --major, --minor, and --patch is allowed")
+		return errors.New("only one of --major, --minor, and --patch is allowed")
 	}
 	return nil
 }

@@ -53,3 +53,18 @@ tunk can read and write tags according to a template. See `tunk --help` for more
 ### release candidates
 
 Prerelease versions can be released on the main branch in additional to regular releases. For example, running `tunk rc` will create tag `v1.2.3-rc.0`. If tunk is called again with the same arguments on a later commit (that results in the same version `v1.2.3`), it will be tagged `v1.2.3-rc.1`, and so on. tunk ignores the build metadata portion of semver strings.
+
+### continuous integration
+
+tunk runs easily in continuous integration systems, either by running `tunk --ci`, or if the `$CI` environment variable is set to "true", "1", or "yes". In CI mode, tunk will push the tags it creates. tunk should work with any git server that supports password authentication. SSH should work as well, as long as its configured correctly (ie the ssh key is passwordless, and the host is authorized).
+
+## configuration
+
+tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at `testdata/tunk.example.yaml`.
+
+### environment variables
+
+The following environment variables configure tunk:
+
+- `CI` - puts tunk in CI mode
+- `GIT_TOKEN`, `GITHUB_TOKEN`, `GH_TOKEN` - sets the git password in CI mode

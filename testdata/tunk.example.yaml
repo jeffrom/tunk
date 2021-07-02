@@ -1,3 +1,9 @@
+policies:
+  - conventional-lax
+  - lax
+branches:
+  - main
+  - master
 custom_policies:
   - name: conventional
     subject_regex: "^(?P<type>[A-Za-z0-9]+)(?P<scope>\([^\)]+\))?!?:\s+(?P<body>.+)$"

@@ -207,6 +207,7 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 	}
 	if g.cfg.InCI && (opts.Author == "" || opts.AuthorEmail == "") {
 		g.cfg.Printf("CI: setting author, author email")
+		// TODO these should be configurable via flags, env vars, etc
 		opts.Author = "tunk"
 		opts.AuthorEmail = "cool+release@example.com"
 	}
