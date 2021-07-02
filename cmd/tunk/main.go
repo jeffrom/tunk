@@ -57,7 +57,7 @@ func run(rawArgs []string) error {
 	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies")
 	flags.BoolVarP(&noPolicy, "no-policy", "P", false, "disable all commit policies")
 	flags.StringArrayVarP(&checkCommits, "check-commit", "C", nil, "only validate commits")
-	flags.BoolVar(&checkCommitsFromGit, "check-commits", false, "only validate commits using git log")
+	flags.BoolVar(&checkCommitsFromGit, "check", false, "only validate commits since last release")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
@@ -240,6 +240,12 @@ delineator from "/" to "#" could look like this:
 {{- with $pre := .Version.Pre -}}
 -{{- join $pre "." -}}
 {{- end -}}
+
+VALIDATION
+
+tunk can validate against policies, allowed scopes, and allowed types:
+
+$ tunk --check
 `, os.Args[0], flags.FlagUsages(), commit.DefaultTagTemplate)
 }
 

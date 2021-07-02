@@ -88,7 +88,7 @@ Prerelease versions can be released on the main branch in additional to regular 
 
 ### validation mode
 
-tunk can be run in validation mode, which will print any invalid commits, taking into account allowed commit types and scopes, as well as configured policies. To run it against all commits since the last release, use: `tunk --check-commits`. To check subjects only, use `tunk --check-commit "my commit subject"`, or `echo "my commit subject" | tunk --check-commit -`.
+tunk can be run in validation mode, which will print any invalid commits, taking into account allowed commit types and scopes, as well as configured policies. To run it against all commits since the last release, use: `tunk --check`. To check subjects only, use `tunk --check-commit "my commit subject"`, or `echo "my commit subject" | tunk --check-commit -`.
 
 ### continuous integration
 
