@@ -2,6 +2,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -85,6 +86,14 @@ func GetDefault() Config {
 			},
 		},
 	}
+}
+
+func (c Config) Validate() error {
+	if (c.Major && (c.Minor || c.Patch)) ||
+		(c.Minor && (c.Patch)) {
+		return errors.New("Only one of --major, --minor, and --patch is allowed")
+	}
+	return nil
 }
 
 func (c Config) Printf(msg string, args ...interface{}) {

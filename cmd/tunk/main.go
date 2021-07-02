@@ -100,6 +100,9 @@ func run(rawArgs []string) error {
 	if noPolicy {
 		cfg.Policies = nil
 	}
+	if err := cfg.Validate(); err != nil {
+		return err
+	}
 
 	var rc string
 	if len(args) > 0 {
