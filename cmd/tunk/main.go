@@ -130,7 +130,7 @@ func run(rawArgs []string) error {
 		var err error
 		if checkCommitsFromGit {
 			err = rnr.CheckCommitsFromGit(ctx)
-		} else if hasPipe {
+		} else if hasPipe && len(checkCommits) == 1 && checkCommits[0] == "-" {
 			err = rnr.CheckReadCommits(ctx, os.Stdin)
 		} else {
 			err = rnr.CheckCommitSubjects(ctx, checkCommits)

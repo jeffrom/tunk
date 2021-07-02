@@ -1,6 +1,6 @@
 # tunk
 
-tunk is an automation tool for tagging releases using a trunk-based development workflow. tunk is unlike some other [Semantic Versioning](https://semver.org/) release tools in that it is intended for trunk-based application release, as opposed to branch-based library releases.
+tunk is an automation tool for tagging releases using a trunk-based development workflow. tunk is unlike some other [Semantic Versioning](https://semver.org/) release tools in that it is intended for trunk-based application release strategies where there is one main trunk branch, and all other branches tend to be short-lived.
 
 There are several similar (and great) tools that serve a similar purpose, such as [semantic-release](https://github.com/semantic-release/semantic-release). semantic-release is intended for branch-based development, and has different release policies than tunk. With semantic-release, in order to publish a release candidate, you typically need an additional branch. tunk just creates another tag on the main branch.
 
@@ -15,6 +15,38 @@ $ go install github.com/jeffrom/tunk/cmd/tunk
 On a git repository with no tags, running `tunk` will print a message that no release tags could be found, and steps for creating one. In the default configuration, the initial tag will look like this: `v0.1.0`. Once a tag has been created, subsequent commits can be automatically tagged.
 
 Running `tunk` on a repository with matching tags will open `$EDITOR` (or `$GIT_EDITOR`) with a summary of the commits that comprise the pending release for final edits. Once saved, a tag will be created for the current commit.
+
+Some example usages:
+
+Create a new release tag:
+
+```bash
+$ tunk
+```
+
+See what the next tag will be:
+
+```bash
+$ tunk -n
+```
+
+Only print the next version (useful for scripting):
+
+```bash
+$ tunk -nq
+```
+
+Bump the minor version:
+
+```bash
+$ tunk --minor
+```
+
+Tag a release candidate named "myrc":
+
+```bash
+$ tunk myrc
+```
 
 ### scopes
 
@@ -53,6 +85,10 @@ tunk can read and write tags according to a template. See `tunk --help` for more
 ### release candidates
 
 Prerelease versions can be released on the main branch in additional to regular releases. For example, running `tunk rc` will create tag `v1.2.3-rc.0`. If tunk is called again with the same arguments on a later commit (that results in the same version `v1.2.3`), it will be tagged `v1.2.3-rc.1`, and so on. tunk ignores the build metadata portion of semver strings.
+
+### validation mode
+
+tunk can be run in validation mode, which will print any invalid commits, taking into account allowed commit types and scopes, as well as configured policies. To run it against all commits since the last release, use: `tunk --check-commits`. To check subjects only, use `tunk --check-commit "my commit subject"`, or `echo "my commit subject" | tunk --check-commit -`.
 
 ### continuous integration
 
