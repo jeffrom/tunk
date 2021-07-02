@@ -14,6 +14,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/pflag"
 
+	"github.com/jeffrom/tunk/commit"
 	"github.com/jeffrom/tunk/config"
 	"github.com/jeffrom/tunk/release"
 	"github.com/jeffrom/tunk/runner"
@@ -44,7 +45,7 @@ func run(rawArgs []string) error {
 	flags.BoolVar(&cfg.InCI, "ci", false, "Run in CI mode")
 	flags.BoolVar(&cfg.NoEdit, "no-edit", false, "Don't edit release tag shortlogs")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
-	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag")
+	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag format")
 	flags.StringVar(&cfg.LogTemplatePath, "shortlog-template", "", "path to custom go/text template to generate shortlog")
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "release-scope", nil, "declare release scopes")
@@ -102,9 +103,17 @@ func run(rawArgs []string) error {
 
 	git := gitcli.New(cfg, "")
 	defer git.Cleanup()
-	rnr := runner.New(cfg, git)
+	rnr, err := runner.New(cfg, git)
+	if err != nil {
+		return err
+	}
 	ctx := context.Background()
 	if err := rnr.Check(ctx, rc); err != nil {
+		return err
+	}
+
+	tag, err := commit.NewTag(cfg.TagTemplate)
+	if err != nil {
 		return err
 	}
 
@@ -117,7 +126,7 @@ func run(rawArgs []string) error {
 	stdoutfd := os.Stdout.Fd()
 	istty := isatty.IsTerminal(stdoutfd)
 	for _, ver := range versions {
-		tag, err := runner.RenderTag(cfg, ver)
+		tag, err := runner.RenderTag(cfg, tag, ver)
 		die(err)
 		if cfg.Quiet {
 			if istty {
@@ -169,7 +178,28 @@ $ tunk -s myscope
 
 # bump the version for all release scopes (can be defined in tunk.yaml)
 $ tunk --all --release-scope myscope --release-scope another-scope
-`, os.Args[0], flags.FlagUsages())
+
+TEMPLATING
+
+Tags can be read and written according to a template. The only requirement is
+that a SemVer-compliant version is included as one continuous string, including
+the prerelease portion.
+
+The default tag template is:
+
+%s
+
+A template that doesn't include the "v" prefix, and changes the scope
+delineator from "/" to "#" could look like this:
+
+{{- with $scope := .Version.Scope -}}
+{{- $scope -}}#
+{{- end -}}
+{{- .Version -}}
+{{- with $pre := .Version.Pre -}}
+-{{- join $pre "." -}}
+{{- end -}}
+`, os.Args[0], flags.FlagUsages(), commit.DefaultTagTemplate)
 }
 
 func readTunkYAML(p string) (*config.Config, error) {

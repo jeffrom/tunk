@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/blang/semver"
@@ -20,12 +19,21 @@ var ErrNoPolicy = errors.New("commit: no policy matched")
 type Analyzer struct {
 	cfg config.Config
 	vcs vcs.Interface
+	tag *Tag
 }
 
-func NewAnalyzer(cfg config.Config, vcs vcs.Interface) *Analyzer {
+func NewAnalyzer(cfg config.Config, vcs vcs.Interface, tag *Tag) *Analyzer {
+	if tag == nil {
+		var err error
+		tag, err = NewTag("")
+		if err != nil {
+			panic(err)
+		}
+	}
 	return &Analyzer{
 		cfg: cfg,
 		vcs: vcs,
+		tag: tag,
 	}
 }
 
@@ -82,18 +90,22 @@ func (a *Analyzer) Analyze(ctx context.Context, rc string) ([]*Version, error) {
 }
 
 func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version, error) {
-	glob := buildTagQuery(scope)
+	glob, err := a.tag.Glob(scope, "")
+	if err != nil {
+		return nil, err
+	}
+	// fmt.Printf("da glob: %q\n", glob)
 	tags, err := a.vcs.ReadTags(ctx, glob)
 	if err != nil {
 		return nil, err
 	}
 	// fmt.Println("the tags:", tags)
-	latest, err := semverLatest(tags, scope, "")
+	latest, err := a.tag.SemverLatest(tags, scope, "")
 	if err != nil {
 		if errors.Is(err, ErrNoTags) {
-			initialTag := "v0.1.0"
-			if scope != "" {
-				initialTag = scope + "/v0.1.0"
+			initialTag, err := a.tag.ExecuteString(TagData{Version: &Version{Version: semver.Version{Minor: 1}}})
+			if err != nil {
+				return nil, err
 			}
 			a.cfg.Warning(`no release tags found. To create one: git tag -a %s -m "initial tag"`, initialTag)
 		}
@@ -125,7 +137,11 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	// fmt.Println("current latest version is:", latestVer)
 	// fmt.Println("version to start analysis from:", latest)
 
-	logQuery := fmt.Sprintf("%s..HEAD", buildGitTag(latest, scope, ""))
+	q, err := a.tag.ExecuteString(TagData{Version: &Version{Version: latest, Scope: scope}})
+	if err != nil {
+		return nil, err
+	}
+	logQuery := fmt.Sprintf("%s..HEAD", q)
 	a.cfg.Debugf("log: %q", logQuery)
 	commits, err := a.vcs.ReadCommits(ctx, logQuery)
 	if err != nil {
@@ -137,23 +153,26 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	}
 
 	if ver != nil && rc != "" {
-		tagPrefix := buildTagPrefix(scope)
-		tagQuery := fmt.Sprintf("%s%s-%s.*", tagPrefix, ver.Version, rc)
+		tagQuery, err := a.tag.GlobVersion(scope, rc, ver.Version)
+		if err != nil {
+			return nil, err
+		}
+		// fmt.Printf("glob tag query: %q\n", tagQuery)
 		tags, err := a.vcs.ReadTags(ctx, tagQuery)
 		if err != nil && !errors.Is(err, ErrNoTags) {
 			return nil, err
 		}
-		ver.RC = a.buildLatestRCTag(scope, rc, tags)
+		pre, err := a.buildLatestRCTag(scope, rc, tags)
+		if err != nil {
+			return nil, err
+		}
+		ver.Version.Pre = pre
+		// fmt.Printf("should be %q, got %q\n", a.buildLatestRCTag(scope, rc, tags), pre)
 	}
 	return ver, nil
 }
 
 func (a *Analyzer) checkPolicies(ctx context.Context, mainBranch string) error {
-	// in local env, make sure the current commit is on one of the allowed branches
-	// if a.cfg.InCI {
-	// 	// XXX
-	// }
-
 	currCommit, err := a.vcs.CurrentCommit(ctx)
 	if err != nil {
 		return err
@@ -183,6 +202,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		if err != nil {
 			return nil, err
 		}
+
 		// fmt.Println("sup", ac.scope, scope, ac.isScoped(scope, allScopes), allScopes)
 		if !ac.isScoped(scope, allScopes) {
 			a.cfg.Debugf("skipping out of scope commit %s (scope: %q, commit scope: %q)", commit.ShortID(), scope, ac.Scope)
@@ -349,23 +369,27 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]BodyAn
 	return annotations, nil
 }
 
-func (a *Analyzer) buildLatestRCTag(scope, rc string, tags []string) string {
-	prefix := buildTagPrefix(scope)
+func (a *Analyzer) buildLatestRCTag(scope, rc string, tags []string) ([]semver.PRVersion, error) {
 	var nums []int
 	for _, t := range tags {
-		trimmed := strings.TrimPrefix(t, prefix)
-		parsed, err := semver.Parse(trimmed)
-		if err != nil || len(parsed.Pre) != 2 || parsed.Pre[0].String() != rc {
+		parsed, err := a.tag.ExtractSemver(scope, rc, t)
+		if err != nil {
 			a.cfg.Warning("invalid tag, skipping: %q (err: %v)", t, err)
+			continue
+		} else if len(parsed.Pre) != 2 {
+			a.cfg.Warning("invalid tag, skipping: %q", t)
+			continue
+		} else if parsed.Pre[0].String() != rc {
+			a.cfg.Warning("tag doesn't match rc %q, skipping: %q", rc, t)
 			continue
 		}
 
-		s := parsed.Pre[1].String()
-		n, err := strconv.ParseInt(s, 10, 16)
-		if err != nil {
+		if !validTunkPre(parsed.Pre) {
 			a.cfg.Warning("invalid tag, skipping: %q, %v", t, err)
 			continue
 		}
+
+		n := parsed.Pre[1].VersionNum
 		nums = append(nums, int(n))
 	}
 	sort.Ints(nums)
@@ -374,7 +398,10 @@ func (a *Analyzer) buildLatestRCTag(scope, rc string, tags []string) string {
 	if len(nums) > 0 {
 		max = nums[len(nums)-1] + 1
 	}
-	return fmt.Sprintf("%s.%d", rc, max)
+	return []semver.PRVersion{
+		{VersionStr: rc},
+		{VersionNum: uint64(max), IsNum: true},
+	}, nil
 }
 
 func bumpVersion(curr semver.Version, releaseType ReleaseType) semver.Version {
@@ -392,20 +419,6 @@ func bumpVersion(curr semver.Version, releaseType ReleaseType) semver.Version {
 	}
 
 	return nextVersion
-}
-
-func buildTagQuery(scope string) string {
-	if scope == "" {
-		return "v*"
-	}
-	return scope + "/v*"
-}
-
-func buildTagPrefix(scope string) string {
-	if scope == "" {
-		return "v"
-	}
-	return scope + "/v"
 }
 
 type AnalyzedCommit struct {

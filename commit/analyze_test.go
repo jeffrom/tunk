@@ -17,7 +17,7 @@ func TestAnalyzeNoTags(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
 	cfg := newTestConfig(nil, &tio)
 	m := vcs.NewMock()
-	a := NewAnalyzer(cfg, m)
+	a := NewAnalyzer(cfg, m, nil)
 
 	_, err := a.Analyze(context.Background(), "")
 	if err == nil {
@@ -29,7 +29,7 @@ func TestAnalyzeNoCommits(t *testing.T) {
 	tio, _, _ := mockTermIO(nil)
 	cfg := newTestConfig(nil, &tio)
 	m := vcs.NewMock().SetTags("v0.1.0")
-	a := NewAnalyzer(cfg, m)
+	a := NewAnalyzer(cfg, m, nil)
 
 	_, err := a.Analyze(context.Background(), "")
 	if err == nil {
@@ -81,7 +81,7 @@ func TestAnalyzeSkip(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
-			a := NewAnalyzer(cfg, m)
+			a := NewAnalyzer(cfg, m, nil)
 
 			vers, err := a.Analyze(context.Background(), "")
 			if err != nil {
@@ -125,7 +125,7 @@ func TestAnalyzePatch(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			m := vcs.NewMock().SetTags("v0.1.0").SetCommits(tc.commits...)
-			a := NewAnalyzer(cfg, m)
+			a := NewAnalyzer(cfg, m, nil)
 
 			vers, err := a.Analyze(context.Background(), "")
 			if err != nil {
@@ -193,7 +193,7 @@ func TestAnalyzeMinor(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
-			a := NewAnalyzer(cfg, m)
+			a := NewAnalyzer(cfg, m, nil)
 
 			vers, err := a.Analyze(context.Background(), "")
 			if err != nil {
@@ -237,7 +237,7 @@ func TestAnalyzeMajor(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
-			a := NewAnalyzer(cfg, m)
+			a := NewAnalyzer(cfg, m, nil)
 
 			vers, err := a.Analyze(context.Background(), "")
 			if err != nil {
@@ -297,20 +297,26 @@ func TestAnalyzeRC(t *testing.T) {
 			expectTag: "v0.1.1-rc.0",
 		},
 		{
-			name:      "patch-invalid",
+			name:      "patch-invalid-nonum",
 			tags:      []string{"v0.1.0", "v0.1.1-rc"},
 			commits:   []*model.Commit{conventionalPatchCommit},
 			expectTag: "v0.1.1-rc.0",
 		},
 		{
-			name:      "patch-invalid",
+			name:      "patch-invalid-double",
 			tags:      []string{"v0.1.0", "v0.1.1-rc.0-rc.0"},
 			commits:   []*model.Commit{conventionalPatchCommit},
 			expectTag: "v0.1.1-rc.0",
 		},
 		{
-			name:      "patch-invalid",
+			name:      "patch-invalid-doublezero",
 			tags:      []string{"v0.1.0", "v0.1.1-rc.00"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "patch-invalid-triplezero",
+			tags:      []string{"v0.1.0", "v0.1.1-rc.000"},
 			commits:   []*model.Commit{conventionalPatchCommit},
 			expectTag: "v0.1.1-rc.0",
 		},
@@ -344,7 +350,7 @@ func TestAnalyzeRC(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := newTestConfig(&config.Config{ReleaseScopes: tc.allScopes}, &tio)
 			m := vcs.NewMock().SetTags(tc.tags...).SetCommits(tc.commits...)
-			a := NewAnalyzer(cfg, m)
+			a := NewAnalyzer(cfg, m, nil)
 			ver, err := a.AnalyzeScope(context.Background(), tc.scope, "rc")
 			if err != nil {
 				t.Fatal(err)
@@ -352,8 +358,18 @@ func TestAnalyzeRC(t *testing.T) {
 			if ver == nil {
 				t.Fatal("expected version, got none")
 			}
+
+			tagr, err := NewTag("")
+			if err != nil {
+				t.Fatal(err)
+			}
+			tag, err := tagr.ExecuteString(TagData{Version: ver})
+			if err != nil {
+				t.Fatal(err)
+			}
+
 			expectTag := tc.expectTag
-			if tag := ver.GitTag(); tag != expectTag {
+			if tag != expectTag {
 				t.Errorf("expected tag %q, got %q", expectTag, tag)
 			}
 		})

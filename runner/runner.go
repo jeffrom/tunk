@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"text/template"
 
 	"github.com/jeffrom/tunk/commit"
 	"github.com/jeffrom/tunk/config"
@@ -16,15 +15,21 @@ type Runner struct {
 	cfg        config.Config
 	vcs        vcs.Interface
 	analyzer   *commit.Analyzer
+	tag        *commit.Tag
 	mainBranch string
 }
 
-func New(cfg config.Config, vcs vcs.Interface) *Runner {
+func New(cfg config.Config, vcs vcs.Interface) (*Runner, error) {
+	tag, err := commit.NewTag(cfg.TagTemplate)
+	if err != nil {
+		return nil, err
+	}
 	return &Runner{
 		cfg:      cfg,
 		vcs:      vcs,
-		analyzer: commit.NewAnalyzer(cfg, vcs),
-	}
+		tag:      tag,
+		analyzer: commit.NewAnalyzer(cfg, vcs, tag),
+	}, nil
 }
 
 func (r *Runner) Check(ctx context.Context, rc string) error {
@@ -64,7 +69,7 @@ func (r *Runner) Analyze(ctx context.Context, rc string) ([]*commit.Version, err
 func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) error {
 	for _, ver := range versions {
 		opts := vcs.TagOpts{}
-		tag, err := RenderTag(r.cfg, ver)
+		tag, err := RenderTag(r.cfg, r.tag, ver)
 		if err != nil {
 			return err
 		}
@@ -92,25 +97,6 @@ func (r *Runner) PushTags(ctx context.Context) error {
 	return nil
 }
 
-func RenderTag(cfg config.Config, ver *commit.Version) (string, error) {
-	var tag string
-	var tmpl *template.Template
-	if cfg.TagTemplate != "" {
-		cfg.Debugf("custom tag template: %q", cfg.TagTemplate)
-		// TODO cache this
-		var err error
-		tmpl, err = template.New("custom_tag").Parse(cfg.TagTemplate)
-		if err != nil {
-			return "", err
-		}
-		b := &bytes.Buffer{}
-		if err := tmpl.Execute(b, ver); err != nil {
-			return "", err
-		}
-		tag = b.String()
-	} else {
-		tag = ver.GitTag()
-	}
-
-	return tag, nil
+func RenderTag(cfg config.Config, t *commit.Tag, ver *commit.Version) (string, error) {
+	return t.ExecuteString(commit.TagData{Version: ver})
 }

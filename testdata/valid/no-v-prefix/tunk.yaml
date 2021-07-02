@@ -1,0 +1,8 @@
+tag_template: |
+  {{- with $scope := .Version.Scope -}}
+  {{- $scope -}}/
+  {{- end -}}
+  {{- .Version -}}
+  {{- with $pre := .Version.Pre -}}
+  -{{- join $pre "." -}}
+  {{- end -}}
