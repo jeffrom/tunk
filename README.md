@@ -49,3 +49,7 @@ The default policy configuration triggers a release for all commits except `test
 ### templates
 
 tunk can read and write tags according to a template. See `tunk --help` for more information.
+
+### release candidates
+
+Prerelease versions can be released on the main branch in additional to regular releases. For example, running `tunk rc` will create tag `v1.2.3-rc.0`. If tunk is called again with the same arguments on a later commit (that results in the same version `v1.2.3`), it will be tagged `v1.2.3-rc.1`, and so on. tunk ignores the build metadata portion of semver strings.
