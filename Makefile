@@ -15,6 +15,9 @@ build: $(bin)
 $(bin): $(gofiles)
 	GO111MODULE=on go install ./...
 
+.PHONY: ci
+ci: build test.cover test.lint
+
 .PHONY: clean
 clean:
 	# git clean -x -f
