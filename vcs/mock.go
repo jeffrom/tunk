@@ -46,10 +46,6 @@ func (m *Mock) Push(ctx context.Context, upstream, ref string, opts PushOpts) er
 	return nil
 }
 
-func (m *Mock) Commit(ctx context.Context, opts CommitOpts) error {
-	return nil
-}
-
 func (m *Mock) CreateTag(ctx context.Context, commit, tag string, opts TagOpts) error {
 	return nil
 }
