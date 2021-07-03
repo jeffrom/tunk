@@ -6,6 +6,8 @@ There are several similar (and great) tools that serve a similar purpose, such a
 
 ## install
 
+tunk depends on git being available in the system $PATH.
+
 ```bash
 $ go install github.com/jeffrom/tunk/cmd/tunk
 ```
