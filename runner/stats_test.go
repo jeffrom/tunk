@@ -28,7 +28,7 @@ func TestStats(t *testing.T) {
 	}
 
 	b := &bytes.Buffer{}
-	if err := stats.TextSummary(b); err != nil {
+	if err := stats.TextSummary(b, true); err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("stats output:\n%s", b.String())

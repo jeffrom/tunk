@@ -70,9 +70,14 @@ func (c *statCount) Add(n int64) {
 	c.n += n
 }
 
-func (s *Stats) TextSummary(w io.Writer) error {
+func (s *Stats) TextSummary(w io.Writer, all bool) error {
 	bw := bufio.NewWriter(w)
 	bw.WriteString(fmt.Sprintf("%d commits\n\n", s.Commits))
+
+	limit := 10
+	if all {
+		limit = -1
+	}
 
 	// b, _ := json.MarshalIndent(s.Counts, "", "  ")
 	// fmt.Println(string(b))
@@ -83,7 +88,7 @@ func (s *Stats) TextSummary(w io.Writer) error {
 			return counts[i].n > counts[j].n
 		})
 		bw.WriteString(fmt.Sprintf("%s:\n", toTitle(name)))
-		for _, count := range counts {
+		for _, count := range topCounts(counts, limit) {
 			label := count.label
 			if label == "" {
 				label = "n/a"
@@ -93,6 +98,13 @@ func (s *Stats) TextSummary(w io.Writer) error {
 		bw.WriteString("\n")
 	}
 	return bw.Flush()
+}
+
+func topCounts(s []*statCount, n int) []*statCount {
+	if len(s) <= n || n <= 0 {
+		return s
+	}
+	return s[:n]
 }
 
 func (r *Runner) Stats(ctx context.Context) (*Stats, error) {

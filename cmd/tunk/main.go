@@ -38,6 +38,7 @@ func run(rawArgs []string) error {
 	var checkCommits []string
 	var checkCommitsFromGit bool
 	var readStats bool
+	var readAllStats bool
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -47,7 +48,8 @@ func run(rawArgs []string) error {
 	flags.BoolVar(&cfg.Minor, "minor", false, "bump minor version")
 	flags.BoolVar(&cfg.Patch, "patch", false, "bump patch version")
 	flags.BoolVar(&cfg.InCI, "ci", false, "Run in CI mode")
-	flags.BoolVarP(&readStats, "stats", "S", false, "print repository stats")
+	flags.BoolVarP(&readStats, "stats", "S", false, "print repository stats (with top tens)")
+	flags.BoolVarP(&readAllStats, "stats-all", "A", false, "print all repository stats")
 	flags.BoolVarP(&cfg.NoEdit, "no-edit", "E", false, "Don't edit release tag shortlogs")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
 	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag format")
@@ -126,12 +128,12 @@ func run(rawArgs []string) error {
 	}
 	ctx := context.Background()
 
-	if readStats {
+	if readStats || readAllStats {
 		stats, err := rnr.Stats(ctx)
 		if err != nil {
 			return err
 		}
-		if err := stats.TextSummary(cfg.Term.Stdout); err != nil {
+		if err := stats.TextSummary(cfg.Term.Stdout, readAllStats); err != nil {
 			return err
 		}
 		return nil
