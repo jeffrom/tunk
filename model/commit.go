@@ -12,6 +12,7 @@ type Commit struct {
 	CommitterDate  time.Time
 	Subject        string
 	Body           string
+	Ref            string
 	// Branch string `json:"branch,omitempty"`
 }
 

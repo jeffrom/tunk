@@ -122,16 +122,12 @@ func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts)
 	return err
 }
 
-func (g *Git) Commit(ctx context.Context, opts vcs.CommitOpts) error {
-	return nil
-}
-
-const expectedLogParts = 9
+const expectedLogParts = 10
 
 func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, error) {
 	// TODO chunk the read. use --max-count and the commit id as a cursor
 	args := []string{
-		"log", "--pretty=tformat:_START_%H_SEP_%aN_SEP_%ae_SEP_%ai_SEP_%cN_SEP_%ce_SEP_%ci_SEP_%s_SEP_%b_END_", query,
+		"log", "--pretty=tformat:_START_%H_SEP_%aN_SEP_%ae_SEP_%ai_SEP_%cN_SEP_%ce_SEP_%ci_SEP_%s_SEP_%s_SEP_%b_END_", query,
 	}
 	b, err := g.call(ctx, args)
 	if err != nil {
@@ -196,6 +192,7 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 			CommitterEmail: parts[5],
 			CommitterDate:  committerDate,
 			Subject:        parts[7],
+			Ref:            parts[8],
 			Body:           body,
 		})
 	}
