@@ -34,6 +34,8 @@ func New(cfg config.Config, vcs vcs.Interface) (*Runner, error) {
 
 // Check checks initial requirements for release, such as being on the right branch.
 func (r *Runner) Check(ctx context.Context, rc string) error {
+	// TODO detect scopes from tags (check first release_scopes /
+	// allowed_scopes, and fall back to detection) and check them all
 	if r.mainBranch == "" {
 		branches := r.cfg.Branches
 		if r.cfg.InCI && !r.cfg.BranchesSet {

@@ -129,7 +129,7 @@ func run(rawArgs []string) error {
 		hasPipe := !isatty.IsTerminal(os.Stdin.Fd())
 		var err error
 		if checkCommitsFromGit {
-			err = rnr.CheckCommitsFromGit(ctx)
+			err = rnr.CheckCommitsFromGit(ctx, cfg.Scope)
 		} else if hasPipe && len(checkCommits) == 1 && checkCommits[0] == "-" {
 			err = rnr.CheckReadCommits(ctx, os.Stdin)
 		} else {

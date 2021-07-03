@@ -162,15 +162,15 @@ func (r *Runner) CheckReadCommits(ctx context.Context, rdr io.Reader) error {
 }
 
 // CheckCommitsFromGit checks all commits since the last release.
-func (r *Runner) CheckCommitsFromGit(ctx context.Context) error {
+func (r *Runner) CheckCommitsFromGit(ctx context.Context, scope string) error {
 	if err := r.Check(ctx, ""); err != nil && !isWrongBranchError(err) {
 		return err
 	}
-	latest, err := r.analyzer.LatestRelease(ctx, "", "")
+	latest, err := r.analyzer.LatestRelease(ctx, scope, "")
 	if err != nil {
 		return err
 	}
-	commits, err := r.analyzer.ReadCommitsSince(ctx, "", latest)
+	commits, err := r.analyzer.ReadCommitsSince(ctx, scope, latest)
 	if err != nil {
 		return err
 	}
