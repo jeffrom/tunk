@@ -37,6 +37,7 @@ func run(rawArgs []string) error {
 	var noPolicy bool
 	var checkCommits []string
 	var checkCommitsFromGit bool
+	var readStats bool
 	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -46,6 +47,7 @@ func run(rawArgs []string) error {
 	flags.BoolVar(&cfg.Minor, "minor", false, "bump minor version")
 	flags.BoolVar(&cfg.Patch, "patch", false, "bump patch version")
 	flags.BoolVar(&cfg.InCI, "ci", false, "Run in CI mode")
+	flags.BoolVarP(&readStats, "stats", "S", false, "print repository stats")
 	flags.BoolVarP(&cfg.NoEdit, "no-edit", "E", false, "Don't edit release tag shortlogs")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
 	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag format")
@@ -123,6 +125,17 @@ func run(rawArgs []string) error {
 		return err
 	}
 	ctx := context.Background()
+
+	if readStats {
+		stats, err := rnr.Stats(ctx)
+		if err != nil {
+			return err
+		}
+		if err := stats.TextSummary(cfg.Term.Stdout); err != nil {
+			return err
+		}
+		return nil
+	}
 
 	shouldCheckCommits := checkCommitsFromGit || flags.Lookup("check-commit").Changed
 	if shouldCheckCommits {
