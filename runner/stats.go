@@ -79,6 +79,9 @@ func (s *Stats) TextSummary(w io.Writer) error {
 	buckets := s.sortedBuckets()
 	for _, name := range buckets {
 		counts := s.Counts[name]
+		sort.Slice(counts, func(i, j int) bool {
+			return counts[i].n > counts[j].n
+		})
 		bw.WriteString(fmt.Sprintf("%s:\n", toTitle(name)))
 		for _, count := range counts {
 			label := count.label
