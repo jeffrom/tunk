@@ -88,7 +88,7 @@ func (s *Stats) TextSummary(w io.Writer) error {
 			if label == "" {
 				label = "n/a"
 			}
-			bw.WriteString(fmt.Sprintf("  %20s\t\t%d\n", label, count.n))
+			bw.WriteString(fmt.Sprintf("  %30s\t\t%d\n", label, count.n))
 		}
 		bw.WriteString("\n")
 	}
