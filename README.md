@@ -8,6 +8,14 @@ There are several similar (and great) tools that serve a similar purpose, such a
 
 tunk depends on git being available in the system $PATH.
 
+From source:
+
+```bash
+$ git clone jeffrom/tunk
+$ make
+$ sudo make install  # uninstall with sudo make uninstall
+```
+
 Install using go toolchain:
 
 ```bash

@@ -16,7 +16,8 @@ builds:
       - CGO_ENABLED=0
     main: ./cmd/tunk
     binary: tunk
-    ldflags: -s -w -X github.com/jeffrom/tunk/release.Version={{.Version}} -X github.com/jeffrom/tunk/release.Commit={{.ShortCommit}} -X github.com/jeffrom/tunk/release.Date={{.Date}}
+
+    ldflags: -s -w -X main.Version={{.Version}} -X main.ShareDir=/usr/local/share/tunk
 
 # dockers:
 # - dockerfile: .goreleaser/Dockerfile

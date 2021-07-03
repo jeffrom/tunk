@@ -1,3 +1,6 @@
-*.out
+cov.out
 
-dist/
+/tunk
+
+*.1
+*.5

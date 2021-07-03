@@ -1,14 +1,5 @@
-./logs/
-./report/
-/tmp
-./vendor/
-./build/
-./dist/
+cov.out
 
-*.test
-*.pprof
-*.out
+/tunk
 
-/testdata/*.golden.actual
-
-**/*.git
+*.1

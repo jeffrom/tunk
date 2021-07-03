@@ -16,9 +16,14 @@ import (
 
 	"github.com/jeffrom/tunk/commit"
 	"github.com/jeffrom/tunk/config"
-	"github.com/jeffrom/tunk/release"
 	"github.com/jeffrom/tunk/runner"
 	"github.com/jeffrom/tunk/vcs/gitcli"
+)
+
+var (
+	// these are overridden by go build -X
+	ShareDir string
+	Version  string
 )
 
 func main() {
@@ -60,8 +65,8 @@ func run(rawArgs []string) error {
 	flags.StringArrayVar(&cfg.AllowedTypes, "allowed-type", nil, "declare allowed commit types")
 	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies")
 	flags.BoolVarP(&noPolicy, "no-policy", "P", false, "disable all commit policies")
-	flags.StringArrayVarP(&checkCommits, "check-commit", "C", nil, "only validate commits")
-	flags.BoolVar(&checkCommitsFromGit, "check", false, "only validate commits since last release")
+	flags.StringArrayVar(&checkCommits, "check-commit", nil, "only validate commits")
+	flags.BoolVarP(&checkCommitsFromGit, "check", "C", false, "only validate commits since last release")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
@@ -74,7 +79,7 @@ func run(rawArgs []string) error {
 		return nil
 	}
 	if version {
-		cfg.Printf("%s", release.Version)
+		cfg.Printf("%s", Version)
 		return nil
 	}
 	if !cfg.InCI {
@@ -220,6 +225,13 @@ A utility for creating Semantic Version-compliant tags.
 
 FLAGS
 %s
+
+See the following man pages for more information:
+
+man tunk
+man 5 tunk-config
+man tunk-ci
+
 EXAMPLES
 
 # bump the version, if there are any new commits
@@ -234,34 +246,9 @@ $ tunk -s myscope
 # bump the version for all release scopes (can be defined in tunk.yaml)
 $ tunk --all --release-scope myscope --release-scope another-scope
 
-TEMPLATING
-
-Tags can be read and written according to a template. The only requirement is
-that a SemVer-compliant version is included as one continuous string, including
-the prerelease portion. See "go doc github.com/jeffrom/tunk/commit TagData" for
-more information.
-
-The default tag template is:
-
-%s
-
-A template that doesn't include the "v" prefix, and changes the scope
-delineator from "/" to "#" could look like this:
-
-{{- with $scope := .Version.Scope -}}
-{{- $scope -}}#
-{{- end -}}
-{{- .Version -}}
-{{- with $pre := .Version.Pre -}}
--{{- join $pre "." -}}
-{{- end -}}
-
-VALIDATION
-
-tunk can validate against policies, allowed scopes, and allowed types:
-
+# validate against policies, allowed scopes, and allowed types:
 $ tunk --check
-`, os.Args[0], flags.FlagUsages(), commit.DefaultTagTemplate)
+`, os.Args[0], flags.FlagUsages())
 }
 
 func readTunkYAML(p string) (*config.Config, error) {

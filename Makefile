@@ -1,27 +1,99 @@
+# took this from git.sr.ht/sircmpwn/aerc
+.POSIX:
+.SUFFIXES:
+.SUFFIXES: .1 .5 .7 .1.scd .5.scd .7.scd
+
+override undefine VERSION # don't allow local overrides, we want our version
+_git_version=$(shell git describe --long --tags --dirty 2>/dev/null | sed 's/-/.r/;s/-/./')
+ifeq ($(strip $(_git_version)),)
+VERSION=0.5.0
+else
+VERSION=$(_git_version)
+endif
+
+VPATH=doc
+PREFIX?=/usr/local
+BINDIR?=$(PREFIX)/bin
+SHAREDIR?=$(PREFIX)/share/tunk
+MANDIR?=$(PREFIX)/share/man
+GO?=go
+GOFLAGS?=
+
+# end git.sr.git/sircmpwn/aerc stealing, header portion at least :)
+
 TMPDIR := $(if $(TMPDIR),$(TMPDIR),"/tmp/")
 GOPATH := $(shell go env GOPATH)
 
-bin := $(GOPATH)/bin/tunk
+bin := tunk
 gofiles := $(wildcard go.mod go.sum *.go **/*.go **/**/*.go **/**/**/*.go)
 
 gocoverutil := $(GOPATH)/bin/gocoverutil
 staticcheck := $(GOPATH)/bin/staticcheck
 gomodoutdated := $(GOPATH)/bin/go-mod-outdated
 
-all: build
+all: build doc
 
 build: $(bin)
 
 $(bin): $(gofiles)
-	GO111MODULE=on go install ./...
+	$(GO) build $(GOFLAGS) \
+		-ldflags "-X main.Prefix=$(PREFIX) \
+		-X main.ShareDir=$(SHAREDIR) \
+		-X main.Version=$(VERSION)" \
+		-o $@ \
+		./cmd/tunk
 
-.PHONY: ci
-ci: build test.cover test.lint
+DOCS := \
+	tunk.1 \
+	tunk-ci.1 \
+	tunk-config.5
+
+.1.scd.1:
+	scdoc < $< > $@
+
+.5.scd.5:
+	scdoc < $< > $@
+
+.7.scd.7:
+	scdoc < $< > $@
+
+doc: $(DOCS)
+
+# Exists in GNUMake but not in NetBSD make and others.
+RM?=rm -f
 
 .PHONY: clean
 clean:
-	# git clean -x -f
-	rm -rf $(TMPDIR)/tunk-*
+	$(RM) -r $(TMPDIR)/tunk-*
+	$(RM) $(DOCS)
+
+.PHONY: install
+install: all
+	mkdir -m755 -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)$(MANDIR)/man5
+	install -m755 $(bin) $(DESTDIR)$(BINDIR)/tunk
+	install -m644 tunk.1 $(DESTDIR)$(MANDIR)/man1/tunk.1
+	install -m644 tunk-ci.1 $(DESTDIR)$(MANDIR)/man1/tunk-ci.1
+	install -m644 tunk-config.5 $(DESTDIR)$(MANDIR)/man5/tunk-config.5
+
+RMDIR_IF_EMPTY:=sh -c '\
+if test -d $$0 && ! ls -1qA $$0 | grep -q . ; then \
+	rmdir $$0; \
+fi'
+
+.PHONY: uninstall
+uninstall:
+	$(RM) $(DESTDIR)$(BINDIR)/tunk
+	$(RM) $(DESTDIR)$(MANDIR)/man1/tunk.1
+	$(RM) $(DESTDIR)$(MANDIR)/man1/tunk-ci.1
+	$(RM) $(DESTDIR)$(MANDIR)/man5/tunk-config.5
+	$(RM) -r $(DESTDIR)$(SHAREDIR)
+	${RMDIR_IF_EMPTY} $(DESTDIR)$(BINDIR)
+	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)/man1
+	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)/man5
+	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)
+
+.PHONY: ci
+ci: build test.cover test.lint
 
 .PHONY: test
 test:
@@ -65,4 +137,3 @@ $(staticcheck):
 
 $(gomodoutdated):
 	GO111MODULE=off go get github.com/psampaz/go-mod-outdated
-
