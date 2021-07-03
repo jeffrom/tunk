@@ -8,8 +8,19 @@ There are several similar (and great) tools that serve a similar purpose, such a
 
 tunk depends on git being available in the system $PATH.
 
+Install using go toolchain:
+
 ```bash
 $ go install github.com/jeffrom/tunk/cmd/tunk
+```
+
+Install the latest version directly from github using curl:
+
+```bash
+$ export version=$(curl --silent "https://api.github.com/repos/jeffrom/tunk/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+$ curl -L -o tunk.tar.gz https://github.com/jeffrom/tunk/releases/download/$version/tunk_$(echo -n $version | sed -e 's/^v//')_$(uname -s)_$(uname -p).tar.gz
+$ tar zxf tunk.tar.gz
+$ mv tunk /usr/local/bin/
 ```
 
 ## usage
