@@ -126,9 +126,10 @@ func (g *Git) Commit(ctx context.Context, opts vcs.CommitOpts) error {
 	return nil
 }
 
-const ExpectedLogParts = 9
+const expectedLogParts = 9
 
 func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, error) {
+	// TODO chunk the read. use --max-count and the commit id as a cursor
 	args := []string{
 		"log", "--pretty=tformat:_START_%H_SEP_%aN_SEP_%ae_SEP_%ai_SEP_%cN_SEP_%ce_SEP_%ci_SEP_%s_SEP_%b_END_", query,
 	}
@@ -138,12 +139,12 @@ func (g *Git) ReadCommits(ctx context.Context, query string) ([]*model.Commit, e
 	}
 
 	var commits []*model.Commit
-	scanner := bufio.NewScanner(bytes.NewBuffer(b))
+	scanner := bufio.NewScanner(bytes.NewReader(b))
 	for scanner.Scan() {
 		s := scanner.Text()
 		parts := strings.Split(s, "_SEP_")
-		if len(parts) != ExpectedLogParts {
-			return nil, fmt.Errorf("gitcli: expected %d parts from git log, got %d", ExpectedLogParts, len(parts))
+		if len(parts) != expectedLogParts {
+			return nil, fmt.Errorf("gitcli: expected %d parts from git log, got %d", expectedLogParts, len(parts))
 		}
 
 		commitID := parts[0]
