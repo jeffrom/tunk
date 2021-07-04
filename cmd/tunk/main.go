@@ -48,7 +48,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
-	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
+	flags.BoolVarP(&cfg.All, "all", "a", false, "operate on all scopes")
 	flags.BoolVar(&cfg.Major, "major", false, "bump major version")
 	flags.BoolVar(&cfg.Minor, "minor", false, "bump minor version")
 	flags.BoolVar(&cfg.Patch, "patch", false, "bump patch version")
