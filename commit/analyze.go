@@ -489,6 +489,9 @@ func (acs AnalyzedCommits) TextSummary(w io.Writer) error {
 			bw.WriteString(ac.Commit.Subject)
 			bw.WriteString("\n")
 		}
+		if ac.Policy != nil {
+			bw.WriteString(fmt.Sprintf("  Policy: %s\n", ac.Policy.Name))
+		}
 		bw.WriteString(fmt.Sprintf("  Release type: %s\n", ac.ReleaseType))
 		if ac.Scope != "" {
 			bw.WriteString(fmt.Sprintf("  Scope: %s\n", ac.Scope))
