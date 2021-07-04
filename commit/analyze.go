@@ -164,6 +164,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	// handle overrides
 	if a.cfg.Major {
 		nextVer := latest
+		nextVer.Pre = ver.Version.Pre
 		nextVer.Major++
 		nextVer.Minor = 0
 		nextVer.Patch = 0
@@ -172,6 +173,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	}
 	if a.cfg.Minor {
 		nextVer := latest
+		nextVer.Pre = ver.Version.Pre
 		nextVer.Minor++
 		nextVer.Patch = 0
 		ver.Version = nextVer
@@ -179,6 +181,7 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 	}
 	if a.cfg.Patch {
 		nextVer := latest
+		nextVer.Pre = ver.Version.Pre
 		nextVer.Patch++
 		ver.Version = nextVer
 		return ver, nil
@@ -266,6 +269,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		return &Version{
 			Commit:     latestCommit.Commit.ID,
 			Version:    bumpVersion(latest, relType),
+			Scope:      scope,
 			AllCommits: acs,
 		}, nil
 	}

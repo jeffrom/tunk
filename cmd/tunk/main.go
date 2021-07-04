@@ -44,14 +44,14 @@ func run(rawArgs []string) error {
 	var checkCommitsFromGit bool
 	var readStats bool
 	var readAllStats bool
-	flags := pflag.NewFlagSet("tunk", pflag.PanicOnError)
+	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
 	flags.BoolVar(&cfg.All, "all", false, "operate on all scopes")
-	flags.BoolVar(&cfg.Major, "major", false, "bump major version")
-	flags.BoolVar(&cfg.Minor, "minor", false, "bump minor version")
-	flags.BoolVar(&cfg.Patch, "patch", false, "bump patch version")
+	flags.BoolVarP(&cfg.Major, "major", "M", false, "bump major version")
+	flags.BoolVarP(&cfg.Minor, "minor", "m", false, "bump minor version")
+	flags.BoolVarP(&cfg.Patch, "patch", "p", false, "bump patch version")
 	flags.BoolVar(&cfg.InCI, "ci", false, "Run in CI mode")
 	flags.BoolVarP(&readStats, "stats", "S", false, "print repository stats (with top tens)")
 	flags.BoolVarP(&readAllStats, "stats-all", "A", false, "print all repository stats")
