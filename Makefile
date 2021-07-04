@@ -65,7 +65,7 @@ RM?=rm -f
 .PHONY: clean
 clean:
 	$(RM) -r $(TMPDIR)/tunk-*
-	$(RM) $(DOCS)
+	$(RM) $(DOCS) tunk
 
 .PHONY: install
 install: all
