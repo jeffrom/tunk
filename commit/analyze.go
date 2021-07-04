@@ -481,6 +481,9 @@ func (acs AnalyzedCommits) TextSummary(w io.Writer) error {
 	bw := bufio.NewWriter(w)
 
 	multi := len(acs) > 1
+	if multi {
+		bw.WriteString(fmt.Sprintf("%d commits\n", len(acs)))
+	}
 	for _, ac := range acs {
 		if multi {
 			bw.WriteString(ac.Commit.Subject)

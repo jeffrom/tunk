@@ -191,7 +191,7 @@ func run(rawArgs []string) error {
 		if checkCommitsFromGit {
 			acs, err = rnr.CheckCommitsFromGit(ctx, cfg.Scope)
 		} else if hasPipe && len(checkCommits) == 1 && checkCommits[0] == "-" {
-			acs, err = rnr.CheckReadCommits(ctx, os.Stdin)
+			acs, err = rnr.CheckReadCommit(ctx, os.Stdin)
 		} else {
 			acs, err = rnr.CheckCommits(ctx, checkCommits)
 		}

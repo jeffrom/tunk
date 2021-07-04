@@ -138,7 +138,14 @@ func (r *Runner) parseCommit(s string) (*model.Commit, error) {
 	if len(lines) < 2 {
 		return &model.Commit{Subject: s}, nil
 	}
-	body := strings.Join(lines[2:], "\n")
+	var cleaned []string
+	for _, line := range lines[2:] {
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		cleaned = append(cleaned, line)
+	}
+	body := strings.Join(cleaned, "\n")
 	return &model.Commit{Subject: lines[0], Body: body}, nil
 }
 
@@ -146,33 +153,25 @@ func (r *Runner) parseCommit(s string) (*model.Commit, error) {
 // 	return nil, nil
 // }
 
-func (r *Runner) CheckReadCommits(ctx context.Context, rdr io.Reader) (commit.AnalyzedCommits, error) {
+func (r *Runner) CheckReadCommit(ctx context.Context, rdr io.Reader) (commit.AnalyzedCommits, error) {
 	var failures []FailureEntry
-	s := bufio.NewScanner(rdr)
-	var all commit.AnalyzedCommits
-	for s.Scan() {
-		commit := s.Text()
-		if commit == "" {
-			continue
-		}
-		acs, err := r.CheckCommits(ctx, []string{commit})
-		if err != nil {
-			cf := CheckFailure{}
-			if !errors.As(err, &cf) {
-				return nil, err
-			}
-			failures = append(failures, cf.Failures...)
-		}
-		all = append(all, acs...)
-	}
-	if err := s.Err(); err != nil {
+	raw, err := io.ReadAll(rdr)
+	if err != nil {
 		return nil, err
+	}
+	acs, err := r.CheckCommits(ctx, []string{string(raw)})
+	if err != nil {
+		cf := CheckFailure{}
+		if !errors.As(err, &cf) {
+			return nil, err
+		}
+		failures = append(failures, cf.Failures...)
 	}
 
 	if len(failures) > 0 {
 		return nil, CheckFailure{Failures: failures}
 	}
-	return all, nil
+	return acs, nil
 }
 
 // CheckCommitsFromGit checks all commits since the last release.
