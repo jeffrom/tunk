@@ -21,6 +21,11 @@ configured to support a number of release policies using a config file, which by
 default is read from tunk.yaml in the current directory, or the first parent
 directory where it can be found.
 
+It parses commit messages according to policies, enabling tunk to automatically
+bump versions and validate commit messages. It can also act as a manual version
+bumping utility. When run in a terminal, it will open *$EDITOR* for final
+tag message changes before creating the tag.
+
 # OPTIONS
 
 *-V, --version*
@@ -38,8 +43,8 @@ directory where it can be found.
 *-c, --config* _file_
 	Specify a configuration file. See *tunk-config*(5).
 
-*--major, --minor, --patch*
-	Bump major, minor, or patch version, ignoring any policies.
+*-M|--major, -m|--minor, -p|--patch*
+	Bump major, minor, or patch version. Ignores any policies.
 
 *-C, --check*
 	Check commits since last release according to configured release policies.
@@ -80,6 +85,23 @@ In the default configuration, tags are created with the following format:
 vM.m.p
 ```
 
+Tags can also include scopes and prerelease information. For example, a tag
+version v.1.2.3, with a scope named "cool", and a prerelease named "burrito",
+*tunk burrito -s cool* would create this tag:
+
+```
+cool/v.1.2.3-burrito.0
+```
+
+If an additional patch commit was then created, and the same command was run
+again, the following tag would be created:
+
+```
+cool/v.1.2.3-burrito.1
+```
+
+and so on, until a minor or major version commit is created.
+
 ## SCOPES
 
 Releases can be scoped using a name, which in the default configuration will
@@ -89,11 +111,15 @@ create a tag with the following format:
 SCOPE/vM.m.p
 ```
 
-## PRERELEASE VERSIONS
+## PRERELEASES
 
-tunk creates Semantic-Version prelease tags can be created that have the
-structure, "-NAME.N", where N is a number incremented for each new prerelease
-that already matches a release version.
+Semantic-Version prelease tags can be created that have the following structure,
+where and *RC* is the prerelease's name, and *N* is a number incremented for
+each new prerelease that already matches a release version:
+
+```
+vM.m.p-RC.N
+```
 
 # POLICIES
 
@@ -112,6 +138,8 @@ specified using *--policy*. The following policies are available by default:
 
 ++
 The default policies are: *conventional-lax, lax*
+
+For information on configuring custom policies, see *tunk-config*(5).
 
 # CONTINUOUS INTEGRATION
 
@@ -132,6 +160,12 @@ Create a prerelease tag named "rc":
 
 ```
 $ tunk rc
+```
+
+To require a manual version bump:
+
+```
+$ tunk -P  # will fail unless --major, --minor, or --patch are provided
 ```
 
 # SEE ALSO
