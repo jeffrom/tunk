@@ -112,7 +112,7 @@ test.lint: $(staticcheck)
 .PHONY: test.cover
 test.cover: SHELL:=/bin/bash
 test.cover: $(gocoverutil)
-	$(gocoverutil) -coverprofile=cov.out test -covermode=count ./... \
+	set -eo pipefail; $(gocoverutil) -coverprofile=cov.out test -covermode=count ./... \
 		2> >(grep -v "no packages being tested depend on matches for pattern" 1>&2) \
 		| sed -e 's/of statements in .*/of statements/'
 	@echo -n "total: "; go tool cover -func=cov.out | tail -n 1 | sed -e 's/\((statements)\|total:\)//g' | tr -s "[:space:]"
