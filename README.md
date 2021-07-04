@@ -39,6 +39,14 @@ $ tar zxf tunk.tar.gz
 $ mv tunk /usr/local/bin/
 ```
 
+### git hook
+
+A git hook can be installed to validate commit messages:
+
+```sh
+cp contrib/git-hook/commit-msg ~/myrepo/.git/hooks/
+```
+
 ## usage
 
 On a git repository with no tags, running `tunk` will print a message that no release tags could be found, and steps for creating one. In the default configuration, the initial tag will look like this: `v0.1.0`. Once a tag has been created, subsequent commits can be automatically tagged.

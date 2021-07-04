@@ -187,12 +187,13 @@ func run(rawArgs []string) error {
 	if shouldCheckCommits {
 		hasPipe := !isatty.IsTerminal(os.Stdin.Fd())
 		var err error
+		var acs commit.AnalyzedCommits
 		if checkCommitsFromGit {
-			err = rnr.CheckCommitsFromGit(ctx, cfg.Scope)
+			acs, err = rnr.CheckCommitsFromGit(ctx, cfg.Scope)
 		} else if hasPipe && len(checkCommits) == 1 && checkCommits[0] == "-" {
-			err = rnr.CheckReadCommits(ctx, os.Stdin)
+			acs, err = rnr.CheckReadCommits(ctx, os.Stdin)
 		} else {
-			err = rnr.CheckCommitSubjects(ctx, checkCommits)
+			acs, err = rnr.CheckCommits(ctx, checkCommits)
 		}
 		if err != nil {
 			cf := runner.CheckFailure{}
@@ -203,8 +204,8 @@ func run(rawArgs []string) error {
 			}
 			return err
 		}
-		cfg.Printf("OK")
-		return nil
+		cfg.Printf("commit OK")
+		return acs.TextSummary(cfg.Term.Stdout)
 	}
 
 	stdoutfd := os.Stdout.Fd()

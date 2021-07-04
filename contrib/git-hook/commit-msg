@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+
+tunk --check-commit - < "$1"

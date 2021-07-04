@@ -1,9 +1,11 @@
 package commit
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 
@@ -471,6 +473,28 @@ type AnalyzedCommit struct {
 	// but there was a fallback.
 	Valid       bool
 	Annotations []BodyAnnotation
+}
+
+type AnalyzedCommits []*AnalyzedCommit
+
+func (acs AnalyzedCommits) TextSummary(w io.Writer) error {
+	bw := bufio.NewWriter(w)
+
+	multi := len(acs) > 1
+	for _, ac := range acs {
+		if multi {
+			bw.WriteString(ac.Commit.Subject)
+			bw.WriteString("\n")
+		}
+		bw.WriteString(fmt.Sprintf("  Release type: %s\n", ac.ReleaseType))
+		if ac.Scope != "" {
+			bw.WriteString(fmt.Sprintf("  Scope: %s\n", ac.Scope))
+		}
+		if ac.CommitType != "" {
+			bw.WriteString(fmt.Sprintf("  Commit Type: %s\n", ac.CommitType))
+		}
+	}
+	return bw.Flush()
 }
 
 func (ac *AnalyzedCommit) isScoped(scope string, allScopes []string) bool {
