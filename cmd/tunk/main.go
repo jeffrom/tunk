@@ -67,6 +67,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&noPolicy, "no-policy", "P", false, "disable all commit policies")
 	flags.StringArrayVar(&checkCommits, "check-commit", nil, "only validate commits")
 	flags.BoolVarP(&checkCommitsFromGit, "check", "C", false, "only validate commits since last release")
+	flags.StringVar(&cfg.Name, "name", "", "name the project")
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")

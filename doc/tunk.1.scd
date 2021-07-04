@@ -11,6 +11,10 @@ _tunk_ [-Vhnq]
 	\ \[--major|--minor|--patch]
 	\ \[--check|--check-commit _subject_]
 	\ \[--stats|--stats-all]
+	\ \[--policy|--no-policy]
+	\ \[--allowed-scope] [--allowed-type]
+	\ \[--release-scope]
+	\ \[--scope|--all]
 	\ \[--no-edit]
 	\ \[<prerelease>]
 
@@ -63,6 +67,47 @@ tag message changes before creating the tag.
 
 *-E, --no-edit*
 	Skip final message edits before creating the tag.
+
+*--scope* _scope_
+	Operate on a single _scope_.
+
+*--all*
+	Operate on all scopes. Multiple tags can be created in this mode.
+
+*--policy*
+	Declares a commit policy. Can be specified multiple times. Default:
+	*[conventional-lax, lax]*
+
+*--no-policy*
+	Disables all policies. When this flag is set, one of the *--major*, *--minor*, or
+	*--patch* flags is required.
+
+*--release-scope* _scope_
+	Declares a release scope for the project. If commits that include _scope_
+	are read according to a policy, a tag will be created for the latest scoped
+	commit. Can be specified multiple times.
+
+*--allowed-scope* _scope_
+	Declares an allowed scope for the project. If commits that don't include _scope_
+	are read according to a policy, *tunk --check* will fail. Can be specified
+	multiple times.
+
+*--allowed-type* _type_
+	Declares an allowed commit type for the project. If commits that don't
+	include _type_ are read according to a policy, *tunk --check* will fail. Can
+	be specified multiple times.
+
+*--template*
+	Specify a custom template for rendering tags and tag queries. See
+	*tunk-config*(5) for more information on templating.
+
+*--shortlog-template*
+	Specify a custom template for rendering the release message. See
+	*tunk-config*(5) for more information.
+
+*--name*
+	Provide the name of the root project. If this is not provided, tunk falls
+	back to reading it from *git config --get remote.origin.url*.
 
 *prerelease*
 	Create a prerelease tag.

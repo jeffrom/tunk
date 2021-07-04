@@ -2,7 +2,7 @@ tunk-config(5)
 
 # NAME
 
-tunk-config - YAML configuration options for *tunk*(1)
+tunk-config - configuration options for *tunk*(1)
 
 # CONFIGURATION
 
@@ -10,7 +10,7 @@ TODO explain the configuration file behavior of tunk
 
 TODO explain how to see example tunk.yamls
 
-TODO explain the format and link to yaml spec
+TODO explain the format: yaml (the json equivalent part) or json
 
 # OPTIONS
 
@@ -69,6 +69,20 @@ prefix, and changes the scope delineator from "/" to "#":
 {{- with $pre := .Version.Pre -}}
 -{{- join $pre "." -}}
 {{- end -}}
+```
+
+## SHORTLOG
+
+The tag message is also rendered from a template which can be overridden. The
+default template is:
+
+```
+release: v{{ .Version.Version }}
+
+This release contains the following commits:
+{{ range $commit := .Version.AllCommits }}
+* {{ $commit.Subject }} ({{ $commit.ShortID }})
+{{ end }}
 ```
 
 # SEE ALSO

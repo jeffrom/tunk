@@ -70,6 +70,15 @@ func (r *Runner) Analyze(ctx context.Context, rc string) ([]*commit.Version, err
 }
 
 func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) error {
+	name := r.cfg.Name
+	if name == "" {
+		var err error
+		name, err = r.vcs.ReadNameFromRemoteURL(ctx, "")
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, ver := range versions {
 		opts := vcs.TagOpts{}
 		tag, err := RenderTag(r.cfg, r.tag, ver)
@@ -79,12 +88,16 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 		r.cfg.Printf("creating tag %q for commit %s...", tag, ver.ShortCommit())
 
 		b := &bytes.Buffer{}
-		if err := r.shortlog(ctx, b, ver); err != nil {
+		if err := r.shortlog(ctx, b, ver, name); err != nil {
 			return err
 		}
 		shortlog := b.String()
 		opts.Message = shortlog
-		r.cfg.Debugf("shortlog:\n\n---\n%s", shortlog)
+		if r.cfg.Dryrun {
+			r.cfg.Printf("shortlog:\n\n---\n%s", shortlog)
+		} else {
+			r.cfg.Debugf("shortlog:\n\n---\n%s", shortlog)
+		}
 
 		if err := r.vcs.CreateTag(ctx, ver.Commit, tag, opts); err != nil {
 			return err

@@ -85,6 +85,10 @@ func (m *Mock) CurrentBranch(ctx context.Context) (string, error) {
 	return "main", nil
 }
 
+func (m *Mock) ReadNameFromRemoteURL(ctx context.Context, upstream string) (string, error) {
+	return "tunk", nil
+}
+
 func globMatches(s string, glob string) bool {
 	parts := strings.Split(glob, "*")
 	remaining := s

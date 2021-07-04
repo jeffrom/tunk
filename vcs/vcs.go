@@ -27,6 +27,7 @@ type Interface interface {
 	CurrentBranch(ctx context.Context) (string, error)
 	BranchContains(ctx context.Context, commit, branch string) (bool, error)
 	CurrentCommit(ctx context.Context) (string, error)
+	ReadNameFromRemoteURL(ctx context.Context, upstream string) (string, error)
 }
 
 type TagOpts struct {

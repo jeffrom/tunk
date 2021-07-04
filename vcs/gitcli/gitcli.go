@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -324,6 +326,45 @@ func (g *Git) Cleanup() error {
 		g.askpassCleanup()
 	}
 	return nil
+}
+
+var (
+	// git@github.com:jeffrom/tunk.git
+	gitRemoteSSHURLRE = regexp.MustCompile(`^(?P<prefix>[^@]+[^:]+:)?(?P<path>.+)$`)
+
+	// https://cool:whatever@github.com/jeffrom/tunk.git
+	gitRemoteHTTPURLRE = regexp.MustCompile(`^(?P<prefix>https?://[^/]+/)(?P<path>.+)$`)
+)
+
+func (g *Git) ReadNameFromRemoteURL(ctx context.Context, upstream string) (string, error) {
+	if upstream == "" {
+		upstream = "origin"
+	}
+	args := []string{"config", "--get", fmt.Sprintf("remote.%s.url", upstream)}
+	b, err := g.call(ctx, args)
+	if err != nil {
+		return "", err
+	}
+	rawURI := strings.TrimSpace(string(b))
+
+	m := gitRemoteSSHURLRE.FindStringSubmatch(rawURI)
+	if m == nil {
+		m = gitRemoteHTTPURLRE.FindStringSubmatch(rawURI)
+	}
+
+	if m == nil {
+		return "", fmt.Errorf("failed to parse upstream url %q", rawURI)
+	}
+
+	uri, err := url.Parse(m[2])
+	if err != nil {
+		return "", err
+	}
+
+	_, suff := filepath.Split(filepath.Clean(uri.Path))
+	parts := strings.SplitN(suff, ".", 2)
+
+	return parts[0], nil
 }
 
 func noop() {}
