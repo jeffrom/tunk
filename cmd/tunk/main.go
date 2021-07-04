@@ -45,6 +45,7 @@ func run(rawArgs []string) error {
 	var readStats bool
 	var readAllStats bool
 	var debugConfig string
+	var printConfig bool
 	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -72,6 +73,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config `file`")
+	flags.BoolVar(&printConfig, "print-config", false, "Print default configuration and exit")
 	flags.StringVar(&debugConfig, "debug-config", "", "Write configuration to `file` and exit")
 
 	if err := flags.Parse(rawArgs); err != nil {
@@ -85,6 +87,14 @@ func run(rawArgs []string) error {
 	}
 	if version {
 		cfg.Printf("%s", Version)
+		return nil
+	}
+	if printConfig {
+		b, err := yaml.Marshal(cfg)
+		if err != nil {
+			return err
+		}
+		cfg.Printf("%s", string(b))
 		return nil
 	}
 	if !cfg.InCI {
