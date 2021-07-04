@@ -34,8 +34,8 @@ func (r *Runner) shortlog(ctx context.Context, w io.Writer, ver *commit.Version,
 		return nil
 	}
 	tmpl := defaultShortlogTemplate
-	if r.cfg.LogTemplatePath != "" {
-		tmpl = r.cfg.LogTemplatePath
+	if r.cfg.LogTemplate != "" {
+		tmpl = r.cfg.LogTemplate
 	}
 	t, err := template.New("shortlog").Parse(tmpl)
 	if err != nil {

@@ -58,7 +58,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&cfg.NoEdit, "no-edit", "E", false, "Don't edit release tag shortlogs")
 	flags.StringVarP(&cfg.Scope, "scope", "s", "", "Operate on a scope")
 	flags.StringVar(&cfg.TagTemplate, "template", "", "go text/template for tag format")
-	flags.StringVar(&cfg.LogTemplatePath, "shortlog-template", "", "path to custom go/text template to generate shortlog")
+	flags.StringVar(&cfg.LogTemplate, "shortlog-template", "", "path to custom go/text template to generate shortlog")
 	flags.StringArrayVarP(&cfg.Branches, "branch", "b", []string{"main", "master"}, "set release branches")
 	flags.StringArrayVar(&cfg.ReleaseScopes, "release-scope", nil, "declare release scopes")
 	flags.StringArrayVar(&cfg.AllowedScopes, "allowed-scope", nil, "declare allowed scopes")
