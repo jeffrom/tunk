@@ -47,7 +47,7 @@ tag message changes before creating the tag.
 *-c, --config* _file_
 	Specify a configuration file. See *tunk-config*(5).
 
-*-M|--major, -m|--minor, -p|--patch*
+*--major, --minor, --patch*
 	Bump major, minor, or patch version. Ignores any policies.
 
 *-C, --check*
