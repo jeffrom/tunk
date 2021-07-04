@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -43,18 +44,72 @@ func TestInvalidConfig(t *testing.T) {
 	}
 }
 
+type Conf = config.Config
+
 func TestLoadConfig(t *testing.T) {
 	defaultCfg := config.New(nil)
+	newCfg := func(c *config.Config) *config.Config {
+		cfg := config.New(c)
+		return &cfg
+	}
+	editDefaultCfg := func(fn func(c config.Config) config.Config) *config.Config {
+		cfg := config.New(nil)
+		cfg = fn(cfg)
+		return &cfg
+	}
 	tcs := []struct {
 		name       string
 		shouldFail bool
-		dir        string
+		tunkYAML   string
 		args       []string
 		expect     *config.Config
 	}{
 		{
 			name:   "default",
 			expect: &defaultCfg,
+		},
+		{
+			name:     "release-scopes",
+			tunkYAML: `release_scopes: [nice, cool]`,
+			expect:   newCfg(&Conf{ReleaseScopes: strs("nice", "cool")}),
+		},
+		{
+			name:     "branches",
+			tunkYAML: `branches: [master]`,
+			expect:   newCfg(&Conf{Branches: strs("master")}),
+		},
+		{
+			name:     "branches-unset",
+			tunkYAML: `branches: []`,
+			expect: editDefaultCfg(func(c Conf) Conf {
+				c.Branches = nil
+				return c
+			}),
+		},
+		{
+			name:     "branches-unset-override",
+			tunkYAML: `branches: []`,
+			args:     strs("--branch", "bork"),
+			expect:   newCfg(&Conf{Branches: strs("bork")}),
+		},
+		{
+			name:     "policies",
+			tunkYAML: `policies: [conventional-lax]`,
+			expect:   newCfg(&Conf{Policies: strs("conventional-lax")}),
+		},
+		{
+			name:     "policies-unset",
+			tunkYAML: `policies: []`,
+			expect: editDefaultCfg(func(c Conf) Conf {
+				c.Policies = nil
+				return c
+			}),
+		},
+		{
+			name:     "policies-unset-override",
+			tunkYAML: `policies: []`,
+			args:     strs("--policy", "conventional-lax"),
+			expect:   newCfg(&Conf{Policies: strs("conventional-lax")}),
 		},
 	}
 
@@ -66,8 +121,19 @@ func TestLoadConfig(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			cfgPath := filepath.Join(dir, tc.name)
-			err := run(append([]string{"tunk", "--debug-config", cfgPath}, tc.args...))
+			cleanTestName := strings.ReplaceAll(t.Name(), string(filepath.Separator), "-")
+			tunkYAMLSourcePath := filepath.Join(dir, cleanTestName+".tunk.yaml")
+			cfgPath := filepath.Join(dir, cleanTestName)
+
+			testArgs := []string{"tunk", "--debug-config", cfgPath}
+			if tc.tunkYAML != "" {
+				if err := ioutil.WriteFile(tunkYAMLSourcePath, []byte(tc.tunkYAML), 0644); err != nil {
+					t.Fatal(err)
+				}
+				testArgs = append(testArgs, "-c", tunkYAMLSourcePath)
+			}
+
+			err := run(append(testArgs, tc.args...))
 			if tc.shouldFail && err == nil {
 				t.Fatal("expected failure but got none")
 			} else if !tc.shouldFail && err != nil {

@@ -101,6 +101,13 @@ func run(rawArgs []string) error {
 		if err := mergo.Merge(&cfg, tunkYAML, mergo.WithOverride); err != nil {
 			return err
 		}
+
+		if tunkYAML.Branches != nil && len(tunkYAML.Branches) == 0 && !flags.Lookup("branch").Changed {
+			cfg.Branches = tunkYAML.Branches
+		}
+		if tunkYAML.Policies != nil && len(tunkYAML.Policies) == 0 && !flags.Lookup("policy").Changed {
+			cfg.Policies = tunkYAML.Policies
+		}
 	}
 	if cfg.Debug {
 		b, err := json.MarshalIndent(cfg, "", "  ")
@@ -108,15 +115,11 @@ func run(rawArgs []string) error {
 		cfg.Debugf("config: %s", string(b))
 	}
 	branchesSet := false
-	if fl := flags.Lookup("branch"); fl != nil {
-		if fl.Changed {
-			branchesSet = true
-		}
+	if fl := flags.Lookup("branch"); fl != nil && fl.Changed {
+		branchesSet = true
 	}
-	if tunkYAML != nil {
-		if len(tunkYAML.Branches) > 0 {
-			branchesSet = true
-		}
+	if tunkYAML != nil && tunkYAML.Branches != nil {
+		branchesSet = true
 	}
 	cfg.BranchesSet = branchesSet
 	if noPolicy {
