@@ -14,8 +14,17 @@ This release contains the following commits:
 {{ range $commit := .Version.AllCommits }}
 * {{ $commit.Subject }} ({{ $commit.ShortID }})
 {{ end }}
+{{ messageInfo }}
+`
 
-# Please enter the message for your changes. Lines starting with
+type shortlogData struct {
+	Version *commit.Version
+	Name    string
+}
+
+var funcMap = template.FuncMap{
+	"messageInfo": func() string {
+		return `# Please enter the message for your changes. Lines starting with
 # '#' will be ignored.
 #
 # An empty message does NOT abort the commit.
@@ -23,10 +32,7 @@ This release contains the following commits:
 # Do not modify or remove the line above.
 # Everything below it will be ignored.
 `
-
-type shortlogData struct {
-	Version *commit.Version
-	Name    string
+	},
 }
 
 func (r *Runner) shortlog(ctx context.Context, w io.Writer, ver *commit.Version, name string) error {
@@ -37,7 +43,7 @@ func (r *Runner) shortlog(ctx context.Context, w io.Writer, ver *commit.Version,
 	if r.cfg.LogTemplate != "" {
 		tmpl = r.cfg.LogTemplate
 	}
-	t, err := template.New("shortlog").Parse(tmpl)
+	t, err := template.New("shortlog").Funcs(funcMap).Parse(tmpl)
 	if err != nil {
 		return err
 	}

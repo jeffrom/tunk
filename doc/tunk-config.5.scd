@@ -46,29 +46,19 @@ string, including the prerelease portion.
 
 ## EXAMPLES
 
-The default tag template is:
+The default tag template is roughly:
 
 ```
-{{- with $scope := .Version.Scope -}}
-{{- $scope -}}/
-{{- end -}}
-v{{- .Version -}}
-{{- with $pre := .Version.Pre -}}
--{{- join $pre "." -}}
-{{- end -}}
+{{- with $scope := .Version.Scope -}}{{- $scope -}}/{{- end -}}
+v{{- semver .Version -}}
 ```
 
 As an example of a custom template, here's one that doesn't include the "v"
 prefix, and changes the scope delineator from "/" to "#":
 
 ```
-{{- with $scope := .Version.Scope -}}
-{{- $scope -}}#
-{{- end -}}
-{{- .Version -}}
-{{- with $pre := .Version.Pre -}}
--{{- join $pre "." -}}
-{{- end -}}
+{{- with $scope := .Version.Scope -}}{{- $scope -}}#{{- end -}}
+{{- semver .Version -}}
 ```
 
 ## SHORTLOG

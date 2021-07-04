@@ -19,10 +19,7 @@ var ErrNoTags = errors.New("commit: no release tags found")
 const DefaultTagTemplate = `{{- with $scope := .Version.Scope -}}
 {{- $scope -}}/
 {{- end -}}
-v{{- .Version -}}
-{{- with $pre := .Version.Pre -}}
--{{- join $pre "." -}}
-{{- end -}}`
+v{{- semver .Version -}}`
 
 type TagData struct {
 	Version *Version
@@ -30,6 +27,13 @@ type TagData struct {
 
 var funcMap = template.FuncMap{
 	"join": strings.Join,
+	"semver": func(v *Version) string {
+		main := v.V()
+		if len(v.Version.Pre) > 0 {
+			return main + "-" + strings.Join(v.Pre(), ".")
+		}
+		return main
+	},
 }
 
 type Tag struct {

@@ -93,7 +93,7 @@ uninstall:
 	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)
 
 .PHONY: ci
-ci: build test.cover test.lint
+ci: build doc test.cover test.lint
 
 .PHONY: test
 test:
