@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+# this runs tunk as a manual version bumping tool.
+tunk --no-policy $@
