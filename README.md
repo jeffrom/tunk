@@ -125,3 +125,18 @@ The following environment variables configure tunk:
 
 - `CI` - puts tunk in CI mode
 - `GIT_TOKEN`, `GITHUB_TOKEN`, `GH_TOKEN` - sets the git password in CI mode
+
+## documentation
+
+tunk has man pages. To view them:
+
+```bash
+$ man tunk
+$ man tunk-ci
+$ man 5 tunk-config
+```
+
+## inspirations
+
+* [semantic-release](https://github.com/semantic-release/semantic-release)
+* [semver](https://git.sr.ht/~sircmpwn/dotfiles/tree/master/bin/semver) by Drew DeVault
