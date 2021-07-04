@@ -3,6 +3,7 @@ package runner
 import (
 	"bytes"
 	"context"
+	"os"
 	"testing"
 
 	"github.com/jeffrom/tunk/config"
@@ -12,6 +13,10 @@ import (
 // just reading stats on the current dirs repo (probably always tunks own repo)
 // for now
 func TestStats(t *testing.T) {
+	if env := os.Getenv("CI"); env != "" {
+		t.Skip("This test doesn't work in detached head mode")
+	}
+
 	cfg := config.New(nil)
 	git := gitcli.New(cfg, "")
 	rnr, err := New(cfg, git)
