@@ -74,10 +74,10 @@ prefix, and changes the scope delineator from "/" to "#":
 ## SHORTLOG
 
 The tag message is also rendered from a template which can be overridden. The
-default template is:
+default template is roughly:
 
 ```
-release: v{{ .Version.Version }}
+{{ or .Version.Scope .Name "release" }}: v{{ .Version.Version }}
 
 This release contains the following commits:
 {{ range $commit := .Version.AllCommits }}
