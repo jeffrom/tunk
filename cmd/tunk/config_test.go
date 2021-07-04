@@ -62,6 +62,7 @@ func TestLoadConfig(t *testing.T) {
 		shouldFail bool
 		tunkYAML   string
 		args       []string
+		environ    []string
 		expect     *config.Config
 	}{
 		{
@@ -121,6 +122,15 @@ func TestLoadConfig(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
+			currEnv := os.Environ()
+			defer resetEnviron(t, currEnv)
+			os.Clearenv()
+			for _, env := range tc.environ {
+				parts := strings.SplitN(env, "=", 2)
+				key, val := parts[0], parts[1]
+				die(os.Setenv(key, val))
+			}
+
 			cleanTestName := strings.ReplaceAll(t.Name(), string(filepath.Separator), "-")
 			tunkYAMLSourcePath := filepath.Join(dir, cleanTestName+".tunk.yaml")
 			cfgPath := filepath.Join(dir, cleanTestName)
