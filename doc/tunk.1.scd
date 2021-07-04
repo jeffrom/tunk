@@ -15,7 +15,8 @@ _tunk_ [-Vhnq]
 	\ \[--allowed-scope] [--allowed-type]
 	\ \[--release-scope]
 	\ \[--scope|--all]
-	\ \[--no-edit]
+	\ \[--no-edit] [--name]
+	\ \[--template] [--shortlog-template]
 	\ \[<prerelease>]
 
 # DESCRIPTION
@@ -145,7 +146,8 @@ again, the following tag would be created:
 cool/v.1.2.3-burrito.1
 ```
 
-and so on, until a minor or major version commit is created.
+and so on, until a new minor or major prerelease version, or a new release
+version is created, at which point that counter will restart at zero.
 
 ## SCOPES
 
@@ -169,9 +171,11 @@ vM.m.p-RC.N
 # POLICIES
 
 Commits can be parsed and validated according to policies, which can be
-specified using *--policy*. The following policies are available by default:
+specified using *--policy*. If no policy matches a commit, it is ignored for the
+purposes of calculating the next version. The following policies are available
+by default:
 
-[[ *Policy*
+[- *Policy*
 :- *Format*
 :- *Description*
 |  conventional-lax
