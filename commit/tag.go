@@ -111,7 +111,7 @@ func (t *Tag) SemverLatest(tags []string, scope, rc string) (semver.Version, err
 
 		if rc == "" && len(v.Pre) != 0 {
 			continue
-		} else if rc != "" && v.Pre[0].String() != rc {
+		} else if rc != "" && len(v.Pre) == 2 && v.Pre[0].String() != rc {
 			continue
 		}
 

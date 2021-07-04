@@ -46,6 +46,7 @@ func run(rawArgs []string) error {
 	var readAllStats bool
 	var debugConfig string
 	var printConfig bool
+	var printLatest bool
 	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -74,6 +75,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config `file`")
 	flags.BoolVar(&printConfig, "print-config", false, "Print default configuration and exit")
+	flags.BoolVar(&printLatest, "latest", false, "Print latest version and exit")
 	flags.StringVar(&debugConfig, "debug-config", "", "Write configuration to `file` and exit")
 
 	if err := flags.Parse(rawArgs); err != nil {
@@ -205,6 +207,30 @@ func run(rawArgs []string) error {
 		return nil
 	}
 
+	stdoutfd := os.Stdout.Fd()
+	istty := isatty.IsTerminal(stdoutfd)
+
+	if printLatest {
+		latest, err := rnr.LatestRelease(ctx, cfg.Scope, rc)
+		if err != nil {
+			return err
+		}
+		tagTmpl, err := commit.NewTag(cfg.TagTemplate)
+		if err != nil {
+			return err
+		}
+		tag, err := runner.RenderTag(cfg, tagTmpl, &commit.Version{Version: latest})
+		if err != nil {
+			return err
+		}
+		if cfg.Quiet || !istty {
+			fmt.Fprintf(cfg.Term.Stdout, "%s", tag)
+		} else {
+			fmt.Fprintln(cfg.Term.Stdout, tag)
+		}
+		return nil
+	}
+
 	if err := rnr.Check(ctx, rc); err != nil {
 		return err
 	}
@@ -220,11 +246,11 @@ func run(rawArgs []string) error {
 	}
 	cfg.Debugf("will tag %d:", len(versions))
 
-	stdoutfd := os.Stdout.Fd()
-	istty := isatty.IsTerminal(stdoutfd)
 	for _, ver := range versions {
 		tag, err := runner.RenderTag(cfg, tag, ver)
-		die(err)
+		if err != nil {
+			return err
+		}
 		if cfg.Quiet {
 			if istty {
 				fmt.Println(tag)

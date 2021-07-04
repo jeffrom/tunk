@@ -110,6 +110,10 @@ tag message changes before creating the tag.
 	Provide the name of the root project. If this is not provided, tunk falls
 	back to reading it from *git config --get remote.origin.url*.
 
+*--latest*
+	Prints the latest version in the repository, filtering for prereleases, then
+	exits.
+
 *prerelease*
 	Create a prerelease tag.
 

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/blang/semver"
 	"github.com/jeffrom/tunk/commit"
 	"github.com/jeffrom/tunk/config"
 	"github.com/jeffrom/tunk/vcs"
@@ -68,6 +69,10 @@ func (r *Runner) Check(ctx context.Context, rc string) error {
 
 func (r *Runner) Analyze(ctx context.Context, rc string) ([]*commit.Version, error) {
 	return r.analyzer.Analyze(ctx, rc)
+}
+
+func (r *Runner) LatestRelease(ctx context.Context, scope, rc string) (semver.Version, error) {
+	return r.analyzer.LatestRelease(ctx, scope, rc)
 }
 
 func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) error {
