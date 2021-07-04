@@ -14,7 +14,7 @@ unlikely.
 
 ## install
 
-tunk depends on git being available in the system $PATH.
+tunk depends on git being available in the system $PATH. It also depends on [scdoc](https://git.sr.ht/~sircmpwn/scdoc).
 
 From source:
 

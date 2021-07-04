@@ -77,4 +77,6 @@ This release contains the following commits:
 
 # SEE ALSO
 
+*tunk*(1), *tunk-ci*(1)
+
 # AUTHORS

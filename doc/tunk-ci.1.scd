@@ -4,4 +4,6 @@ tunk-ci(1)
 
 # SEE ALSO
 
+*tunk*(1), *tunk-config*(5)
+
 # AUTHORS
