@@ -4,6 +4,7 @@ package runner
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jeffrom/tunk/commit"
@@ -74,7 +75,7 @@ func (r *Runner) CreateTags(ctx context.Context, versions []*commit.Version) err
 	if name == "" {
 		var err error
 		name, err = r.vcs.ReadNameFromRemoteURL(ctx, "")
-		if err != nil {
+		if err != nil && !errors.Is(err, vcs.ErrRemoteUnavailable) {
 			return err
 		}
 	}

@@ -3,6 +3,7 @@ package vcs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/jeffrom/tunk/model"
@@ -15,6 +16,8 @@ type NotFoundError struct {
 func (e NotFoundError) Error() string {
 	return fmt.Sprintf("vcs: ref %q not found", e.Ref)
 }
+
+var ErrRemoteUnavailable = errors.New("remote not available in repository")
 
 type Interface interface {
 	Fetch(ctx context.Context, upstream, ref string) error

@@ -343,7 +343,7 @@ func (g *Git) ReadNameFromRemoteURL(ctx context.Context, upstream string) (strin
 	args := []string{"config", "--get", fmt.Sprintf("remote.%s.url", upstream)}
 	b, err := g.call(ctx, args)
 	if err != nil {
-		return "", err
+		return "", vcs.ErrRemoteUnavailable
 	}
 	rawURI := strings.TrimSpace(string(b))
 
