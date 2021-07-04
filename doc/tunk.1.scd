@@ -26,7 +26,7 @@ configured to support a number of release policies using a config file, which by
 default is read from tunk.yaml in the current directory, or the first parent
 directory where it can be found.
 
-It parses commit messages according to policies, enabling tunk to automatically
+It parses commit messages according to policies, which are used to automatically
 bump versions and validate commit messages. It can also act as a manual version
 bumping utility. When run in a terminal, it will open *$EDITOR* for final
 tag message changes before creating the tag.
