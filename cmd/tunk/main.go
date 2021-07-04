@@ -44,6 +44,7 @@ func run(rawArgs []string) error {
 	var checkCommitsFromGit bool
 	var readStats bool
 	var readAllStats bool
+	var debugConfig string
 	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -71,8 +72,11 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config file")
+	flags.StringVar(&debugConfig, "debug-config", "", "Write configuration to file and exit")
 
-	die(flags.Parse(rawArgs))
+	if err := flags.Parse(rawArgs); err != nil {
+		return err
+	}
 	args := flags.Args()[1:]
 
 	if help {
@@ -94,7 +98,9 @@ func run(rawArgs []string) error {
 		return err
 	}
 	if tunkYAML != nil {
-		die(mergo.Merge(&cfg, tunkYAML, mergo.WithOverride))
+		if err := mergo.Merge(&cfg, tunkYAML, mergo.WithOverride); err != nil {
+			return err
+		}
 	}
 	if cfg.Debug {
 		b, err := json.MarshalIndent(cfg, "", "  ")
@@ -116,8 +122,25 @@ func run(rawArgs []string) error {
 	if noPolicy {
 		cfg.Policies = nil
 	}
+
+	if debugConfig != "" {
+		b, err := json.MarshalIndent(cfg, "", "  ")
+		if err != nil {
+			return err
+		}
+		if debugConfig == "-" {
+			cfg.Printf("%s", b)
+		} else {
+			if err := ioutil.WriteFile(debugConfig, b, 0644); err != nil {
+				return err
+			}
+		}
+	}
 	if err := cfg.Validate(); err != nil {
 		return err
+	}
+	if debugConfig != "" {
+		return nil
 	}
 	// done setting up config
 
