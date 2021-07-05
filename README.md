@@ -1,6 +1,6 @@
 # tunk
 
-tunk is an automation tool for tagging releases using a trunk-based development workflow. tunk is unlike some other [Semantic Versioning](https://semver.org/) release tools in that it is intended for trunk-based application release strategies where there is one main trunk branch, and all other branches tend to be short-lived.
+tunk is an automation tool for tagging releases using a trunk-based development workflow. tunk is somewhat unlike some other [Semantic Versioning](https://semver.org/) release tools in that it is purpose-built for [trunk-based release strategies](https://trunkbaseddevelopment.com) where there is one main trunk branch, and all other branches tend to be short-lived.
 
 There are several similar (and great) tools that serve a similar purpose, such as [semantic-release](https://github.com/semantic-release/semantic-release). semantic-release is intended for branch-based development, and has different release policies than tunk. With semantic-release, in order to publish a release candidate, you typically need an additional branch. tunk just creates another tag on the main branch. Another goal of tunk is to replace common glue code used in build scripts to read and edit semantic versions.
 
@@ -55,10 +55,13 @@ Running `tunk` on a repository with matching tags will open `$EDITOR` (or `$GIT_
 
 Some example usages:
 
-Create a new release tag:
+Create and push a new release tag:
 
 ```bash
 $ tunk
+# -> deadbeef:v1.2.3
+
+$ git push origin v1.2.3
 ```
 
 See what the next tag will be:
@@ -115,10 +118,6 @@ Custom policies can be defined in a projects directory root, or in any parent di
 
 The default policy configuration triggers a release for all commits except `test`, `chore`, and `docs`, which is a reasonably low-friction way to release. Custom policies can also be defined in `tunk.yaml`. It's also possible to disable one or both of the default policies. If no policies match any commits, or no policies are set, tunk will fail (unless an override flag, such as `--minor`, is provided). An easy way to require a manual override is to run `tunk --no-policy` (or set `policies: []` in tunk.yaml).
 
-### templates
-
-tunk can read and write tags according to a template. See `tunk --help` for more information.
-
 ### release candidates
 
 Prerelease versions can be released on the main branch in additional to regular releases. For example, running `tunk rc` will create tag `v1.2.3-rc.0`. If tunk is called again with the same arguments on a later commit (that results in the same version `v1.2.3`), it will be tagged `v1.2.3-rc.1`, and so on. tunk ignores the build metadata portion of semver strings.
@@ -135,29 +134,13 @@ tunk can run in continuous integration systems, either by running `tunk --ci`, o
 
 tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at [testdata/tunk.example.yaml](testdata/tunk.example.yaml), or can be printed using `tunk --print-default-config`.
 
-### environment variables
-
-The following environment variables configure tunk:
-
-- `CI` - puts tunk in CI mode
-- `GIT_TOKEN`, `GITHUB_TOKEN`, `GH_TOKEN` - sets the git password in CI mode
-
 ## documentation
 
-tunk has man pages:
+tunk has man pages that cover usage and configuration:
 
 * [tunk(1)](doc/tunk.1.scd) - general usage (`man tunk`)
 * [tunk-config(5)](doc/tunk-config.5.scd) - configuration (`man 5 tunk-config`)
 * [tunk-ci(7)](doc/tunk.1.scd) - continuous integration usage (`man 7 tunk-ci`)
-
-## planned for v1.0.0
-
-* go package with equivalent functionality to the cli tool
-* more safety checks
-* better shortlog templates
-* more built-in policies
-* read configuration from `$XDG_CONFIG_HOME`, and maybe handle multiple files in the override chain
-* shell completion
 
 ## develop
 
@@ -183,9 +166,23 @@ $ make ci
 
 ## contribute
 
-Contributions are welcome! If the change adds or changes functionality, probably best to make an issue.
+Contributions are welcome! If the change you want to make adds or changes functionality, probably best to make an issue.
+
+## planned for v1.0.0
+
+* go package with equivalent functionality to the cli tool
+* more safety checks
+* better shortlog templates
+* more built-in policies
+* read configuration from `$XDG_CONFIG_HOME`, and maybe handle multiple files in the override chain
+* shell completion
 
 ## inspirations
 
+Thanks to everyone who contributed to projects that inspired this tool:
+
 * [semantic-release](https://github.com/semantic-release/semantic-release)
 * [semver](https://git.sr.ht/~sircmpwn/dotfiles/tree/master/bin/semver) by Drew DeVault
+* [git-chglog](https://github.com/git-chglog/git-chglog)
+
+And thanks to the contributors to the libraries this project depends on!
