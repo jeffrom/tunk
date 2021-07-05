@@ -2,7 +2,7 @@
 
 tunk is an automation tool for tagging releases using a trunk-based development workflow. tunk is unlike some other [Semantic Versioning](https://semver.org/) release tools in that it is intended for trunk-based application release strategies where there is one main trunk branch, and all other branches tend to be short-lived.
 
-There are several similar (and great) tools that serve a similar purpose, such as [semantic-release](https://github.com/semantic-release/semantic-release). semantic-release is intended for branch-based development, and has different release policies than tunk. With semantic-release, in order to publish a release candidate, you typically need an additional branch. tunk just creates another tag on the main branch.
+There are several similar (and great) tools that serve a similar purpose, such as [semantic-release](https://github.com/semantic-release/semantic-release). semantic-release is intended for branch-based development, and has different release policies than tunk. With semantic-release, in order to publish a release candidate, you typically need an additional branch. tunk just creates another tag on the main branch. Another goal of tunk is to replace common glue code used in build scripts to read and edit semantic versions.
 
 ## status
 
@@ -158,6 +158,32 @@ tunk has man pages:
 * more built-in policies
 * read configuration from `$XDG_CONFIG_HOME`, and maybe handle multiple files in the override chain
 * shell completion
+
+## develop
+
+This repository has a Makefile where common development tasks can be run.
+
+To build tunk and man pages:
+
+```bash
+$ make
+```
+
+To run short tests:
+
+```bash
+$ make test
+```
+
+To run roughly the same tests as CI:
+
+```
+$ make ci
+```
+
+## contribute
+
+Contributions are welcome! If the change adds or changes functionality, probably best to make an issue.
 
 ## inspirations
 
