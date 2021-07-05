@@ -109,6 +109,9 @@ func (g *Git) Push(ctx context.Context, upstream, ref string, opts vcs.PushOpts)
 	if opts.FollowTags {
 		args = append(args, "--follow-tags")
 	}
+	if g.cfg.InCI {
+		args = append(args, "--atomic")
+	}
 	if upstream == "" {
 		upstream = "origin"
 	}
