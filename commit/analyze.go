@@ -395,7 +395,7 @@ func (a *Analyzer) getBodyAnnotations(pol *config.Policy, body string) ([]BodyAn
 		for i, subexp := range bodyRE.SubexpNames() {
 			group := match[i]
 			switch subexp {
-			case "type":
+			case "name":
 				currName = group
 			}
 		}

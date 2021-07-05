@@ -8,7 +8,7 @@ func GetDefault() Config {
 			{
 				Name:                  "conventional-lax",
 				SubjectRE:             `^(?P<type>[A-Za-z0-9]+)(?P<scope>\([^\)]+\))?!?:\s+(?P<body>.+)$`,
-				BodyAnnotationStartRE: `^(?P<type>[A-Z ]+): `,
+				BodyAnnotationStartRE: `^(?P<name>[A-Z ]+): `,
 				BreakingChangeTypes:   []string{"BREAKING CHANGE"},
 				CommitTypes: map[string]string{
 					"feat":        "MINOR",
