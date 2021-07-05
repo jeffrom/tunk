@@ -157,9 +157,53 @@ func validTunkPre(pre []semver.PRVersion) bool {
 // https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
 var semverRE = regexp.MustCompile(`(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0$|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0$|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?`)
 
+var trimLeadingZeroRE = regexp.MustCompile(`0+`)
+
 var errInvalidSemver = errors.New("invalid semver string")
 
 func extractSemver(s string) (semver.Version, error) {
+	var v semver.Version
+	var lastErr error
+Loop:
+	for size := len(s); size > 0; size-- {
+		for start := len(s) - size; start >= 0; start-- {
+			fmt.Printf("err: %v\n", lastErr)
+			part := s[start : start+size]
+			fmt.Printf("part: %q\n", part)
+			if len(part) == 0 {
+				break
+			}
+
+			// TODO "vanity version number" ie, v1.2.3.4, doesn't work. The
+			// commented out code below detects it, but also causes scoped tags
+			// to fail validation.
+			// if parts := strings.SplitN(part, "-", 2); len(parts) > 0 {
+			// 	if mainParts := strings.Split(parts[0], "."); len(mainParts) != 3 {
+			// 		return v, errInvalidSemver
+			// 	}
+			// }
+
+			var err error
+			v, err = semver.ParseTolerant(trimLeadingZeroRE.ReplaceAllLiteralString(part, "0"))
+			if err != nil {
+				lastErr = err
+				continue
+			}
+
+			// if its a valid semver but still invalid tunk release tag, bail
+			if _, verr := extractSemverRE(part); verr != nil {
+				return v, verr
+			}
+
+			lastErr = nil
+			break Loop
+		}
+	}
+
+	return v, lastErr
+}
+
+func extractSemverRE(s string) (semver.Version, error) {
 	if !semverRE.MatchString(s) {
 		return semver.Version{}, fmt.Errorf("failed to parse semver from string: %q", s)
 	}

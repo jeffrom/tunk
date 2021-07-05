@@ -321,6 +321,37 @@ func TestAnalyzeRC(t *testing.T) {
 			expectTag: "v0.1.1-rc.0",
 		},
 		{
+			name:      "patch-invalid-vanity-dash-prefix",
+			tags:      []string{"v0.1.0", "1-v0.1.1"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		{
+			name:      "patch-invalid-vanity-dash-prefix",
+			tags:      []string{"v0.1.0", "1/v0.1.1"},
+			commits:   []*model.Commit{conventionalPatchCommit},
+			expectTag: "v0.1.1-rc.0",
+		},
+		// TODO all of these are bugs
+		// {
+		// 	name:      "patch-invalid-vanity-dot",
+		// 	tags:      []string{"v0.1.0", "v1.0.1.1"},
+		// 	commits:   []*model.Commit{conventionalPatchCommit},
+		// 	expectTag: "v0.1.1-rc.0",
+		// },
+		// {
+		// 	name:      "patch-invalid-vanity-dash",
+		// 	tags:      []string{"v0.1.0", "v1-0.1.1"},
+		// 	commits:   []*model.Commit{conventionalPatchCommit},
+		// 	expectTag: "v0.1.1-rc.0",
+		// },
+		// {
+		// 	name:      "patch-invalid-vanity-dash-v-prefix",
+		// 	tags:      []string{"v0.1.0", "v1-v0.1.1"},
+		// 	commits:   []*model.Commit{conventionalPatchCommit},
+		// 	expectTag: "v0.1.1-rc.0",
+		// },
+		{
 			name:      "scope",
 			tags:      []string{"cool/v0.1.0"},
 			scope:     "cool",
