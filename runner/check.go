@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"strings"
 
 	"github.com/jeffrom/tunk/commit"
@@ -155,7 +156,7 @@ func (r *Runner) parseCommit(s string) (*model.Commit, error) {
 
 func (r *Runner) CheckReadCommit(ctx context.Context, rdr io.Reader) (commit.AnalyzedCommits, error) {
 	var failures []FailureEntry
-	raw, err := io.ReadAll(rdr)
+	raw, err := ioutil.ReadAll(rdr)
 	if err != nil {
 		return nil, err
 	}
