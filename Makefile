@@ -45,8 +45,8 @@ $(bin): $(gofiles)
 
 DOCS := \
 	tunk.1 \
-	tunk-ci.1 \
-	tunk-config.5
+	tunk-config.5 \
+	tunk-ci.7
 
 .1.scd.1:
 	scdoc < $< > $@
@@ -69,10 +69,10 @@ clean:
 
 .PHONY: install
 install: all
-	mkdir -m755 -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)$(MANDIR)/man5
+	mkdir -m755 -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1 $(DESTDIR)$(MANDIR)/man5 $(DESTDIR)$(MANDIR)/man7
 	install -m755 $(bin) $(DESTDIR)$(BINDIR)/tunk
 	install -m644 tunk.1 $(DESTDIR)$(MANDIR)/man1/tunk.1
-	install -m644 tunk-ci.1 $(DESTDIR)$(MANDIR)/man1/tunk-ci.1
+	install -m644 tunk-ci.7 $(DESTDIR)$(MANDIR)/man7/tunk-ci.7
 	install -m644 tunk-config.5 $(DESTDIR)$(MANDIR)/man5/tunk-config.5
 
 RMDIR_IF_EMPTY:=sh -c '\
@@ -84,12 +84,13 @@ fi'
 uninstall:
 	$(RM) $(DESTDIR)$(BINDIR)/tunk
 	$(RM) $(DESTDIR)$(MANDIR)/man1/tunk.1
-	$(RM) $(DESTDIR)$(MANDIR)/man1/tunk-ci.1
+	$(RM) $(DESTDIR)$(MANDIR)/man7/tunk-ci.7
 	$(RM) $(DESTDIR)$(MANDIR)/man5/tunk-config.5
 	$(RM) -r $(DESTDIR)$(SHAREDIR)
 	${RMDIR_IF_EMPTY} $(DESTDIR)$(BINDIR)
 	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)/man1
 	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)/man5
+	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)/man7
 	$(RMDIR_IF_EMPTY) $(DESTDIR)$(MANDIR)
 
 .PHONY: ci

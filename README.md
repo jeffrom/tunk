@@ -129,7 +129,7 @@ tunk can be run in validation mode, which will print any invalid commits, taking
 
 ### continuous integration
 
-tunk runs easily in continuous integration systems, either by running `tunk --ci`, or if the `$CI` environment variable is set to "true", "1", or "yes". In CI mode, tunk will push the tags it creates. tunk should work with any git server that supports password authentication. SSH should work as well, as long as its configured correctly (ie the ssh key is passwordless, and the host is authorized).
+tunk can run in continuous integration systems, either by running `tunk --ci`, or if the `$CI` environment variable is set to "true", "1", or "yes". In CI mode, tunk will push the tags it creates. tunk should work with any git server that supports password authentication. SSH should work as well, as long as its configured correctly (ie the ssh key is passwordless, and the host is authorized).
 
 ## configuration
 
@@ -148,7 +148,7 @@ tunk has man pages:
 
 * [tunk(1)](doc/tunk.1.scd) - general usage (`man tunk`)
 * [tunk-config(5)](doc/tunk-config.5.scd) - configuration (`man 5 tunk-config`)
-* [tunk-ci(1)](doc/tunk.1.scd) - continuous integration usage (`man tunk-ci`)
+* [tunk-ci(7)](doc/tunk.1.scd) - continuous integration usage (`man 7 tunk-ci`)
 
 ## planned for v1.0.0
 
