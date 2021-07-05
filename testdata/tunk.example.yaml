@@ -8,7 +8,7 @@ custom_policies:
   - name: conventional
     subject_regex: "^(?P<type>[A-Za-z0-9]+)(?P<scope>\([^\)]+\))?!?:\s+(?P<body>.+)$"
     body_annotation_start_regex: "^(?P<type>[A-Z ]+): "
-    breaking_change_types: ["BREAKING CHANGE"]
+    breaking_change_annotations: ["BREAKING CHANGE"]
     commit_types:
       feat: MINOR
       fix: PATCH

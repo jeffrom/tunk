@@ -252,7 +252,7 @@ func comparePolicies(t testing.TB, name string, got, expect []config.Policy) {
 		compareString(t, "name", pol.Name, expectPol.Name)
 		compareString(t, "subject_regex", pol.SubjectRE, expectPol.SubjectRE)
 		compareString(t, "body_annotation_start_regex", pol.BodyAnnotationStartRE, expectPol.BodyAnnotationStartRE)
-		compareStrings(t, "breaking_change_types", pol.BreakingChangeTypes, expectPol.BreakingChangeTypes)
+		compareStrings(t, "breaking_change_annotations", pol.BreakingChangeTypes, expectPol.BreakingChangeTypes)
 		compareKVS(t, "commit_types", pol.CommitTypes, expectPol.CommitTypes)
 		compareString(t, "fallback_type", pol.FallbackReleaseType, expectPol.FallbackReleaseType)
 	}
