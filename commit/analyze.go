@@ -163,30 +163,34 @@ func (a *Analyzer) AnalyzeScope(ctx context.Context, scope, rc string) (*Version
 		// fmt.Printf("should be %q, got %q\n", a.buildLatestRCTag(scope, rc, tags), pre)
 	}
 
-	// handle overrides
-	if a.cfg.Major {
-		nextVer := latest
-		nextVer.Pre = ver.Version.Pre
-		nextVer.Major++
-		nextVer.Minor = 0
-		nextVer.Patch = 0
-		ver.Version = nextVer
-		return ver, nil
-	}
-	if a.cfg.Minor {
-		nextVer := latest
-		nextVer.Pre = ver.Version.Pre
-		nextVer.Minor++
-		nextVer.Patch = 0
-		ver.Version = nextVer
-		return ver, nil
-	}
-	if a.cfg.Patch {
-		nextVer := latest
-		nextVer.Pre = ver.Version.Pre
-		nextVer.Patch++
-		ver.Version = nextVer
-		return ver, nil
+	if a.cfg.OverridesSet() {
+		if ver == nil {
+			ver = &Version{}
+		}
+
+		// handle overrides
+		if a.cfg.Major {
+			nextVer := latest
+			nextVer.Major++
+			nextVer.Minor = 0
+			nextVer.Patch = 0
+			ver.Version = nextVer
+			return ver, nil
+		}
+		if a.cfg.Minor {
+			nextVer := latest
+			nextVer.Minor++
+			nextVer.Patch = 0
+			ver.Version = nextVer
+			return ver, nil
+		}
+		if a.cfg.Patch {
+			nextVer := latest
+			nextVer.Pre = ver.Version.Pre
+			nextVer.Patch++
+			ver.Version = nextVer
+			return ver, nil
+		}
 	}
 
 	return ver, nil
