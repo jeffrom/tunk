@@ -74,7 +74,7 @@ func run(rawArgs []string) error {
 	flags.BoolVarP(&cfg.Debug, "verbose", "v", false, "print additional debugging info")
 	flags.BoolVarP(&cfg.Quiet, "quiet", "q", false, "print as little as necessary")
 	flags.StringVarP(&cfgFile, "config", "c", "", "specify config `file`")
-	flags.BoolVar(&printConfig, "print-config", false, "Print default configuration and exit")
+	flags.BoolVar(&printConfig, "print-default-config", false, "Print default configuration and exit")
 	flags.BoolVar(&printLatest, "latest", false, "Print latest version and exit")
 	flags.StringVar(&debugConfig, "debug-config", "", "Write configuration to `file` and exit")
 
