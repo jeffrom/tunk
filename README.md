@@ -133,7 +133,7 @@ tunk runs easily in continuous integration systems, either by running `tunk --ci
 
 ## configuration
 
-tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at [testdata/tunk.example.yaml](testdata/tunk.example.yaml), or can be printed using `tunk --print-config`.
+tunk can be configured via command-line flags, a YAML configuration file, and, in some cases, environment variables. An example configuration file, which contains the default configuration, is located at [testdata/tunk.example.yaml](testdata/tunk.example.yaml), or can be printed using `tunk --print-default-config`.
 
 ### environment variables
 
@@ -144,13 +144,20 @@ The following environment variables configure tunk:
 
 ## documentation
 
-tunk has man pages. To view them:
+tunk has man pages:
 
-```bash
-$ man tunk
-$ man tunk-ci
-$ man 5 tunk-config
-```
+* [tunk(1)](doc/tunk.1.scd) - general usage (`man tunk`)
+* [tunk-config(5)](doc/tunk-config.5.scd) - configuration (`man 5 tunk-config`)
+* [tunk-ci(1)](doc/tunk.1.scd) - continuous integration usage (`man tunk-ci`)
+
+## planned for v1.0.0
+
+* go package with equivalent functionality to the cli tool
+* more safety checks
+* better shortlog templates
+* more built-in policies
+* read configuration from `$XDG_CONFIG_HOME`, and maybe handle multiple files in the override chain
+* shell completion
 
 ## inspirations
 
