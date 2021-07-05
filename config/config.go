@@ -4,19 +4,17 @@ package config
 import (
 	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/imdario/mergo"
 )
 
 type Config struct {
-	InCI           bool       `json:"in_ci,omitempty"`
+	InCI           bool       `json:"ci,omitempty"`
 	Debug          bool       `json:"debug,omitempty"`
 	Dryrun         bool       `json:"dryrun,omitempty"`
 	Quiet          bool       `json:"quiet,omitempty"`
 	All            bool       `json:"all,omitempty"`
 	Scope          string     `json:"scope,omitempty"`
-	Commit         string     `json:"commit,omitempty"`
 	Name           string     `json:"name,omitempty"`
 	Major          bool       `json:"major,omitempty"`
 	Minor          bool       `json:"minor,omitempty"`

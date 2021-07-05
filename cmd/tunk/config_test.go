@@ -174,7 +174,6 @@ func TestLoadConfig(t *testing.T) {
 			compareBool(t, "quiet", cfg.Quiet, expectCfg.Quiet)
 			compareBool(t, "all", cfg.All, expectCfg.All)
 			compareString(t, "scope", cfg.Scope, expectCfg.Scope)
-			compareString(t, "commit", cfg.Commit, expectCfg.Commit)
 			compareString(t, "name", cfg.Name, expectCfg.Name)
 			compareBool(t, "major", cfg.Major, expectCfg.Major)
 			compareBool(t, "minor", cfg.Minor, expectCfg.Minor)
