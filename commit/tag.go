@@ -167,9 +167,7 @@ func extractSemver(s string) (semver.Version, error) {
 Loop:
 	for size := len(s); size > 0; size-- {
 		for start := len(s) - size; start >= 0; start-- {
-			fmt.Printf("err: %v\n", lastErr)
 			part := s[start : start+size]
-			fmt.Printf("part: %q\n", part)
 			if len(part) == 0 {
 				break
 			}
