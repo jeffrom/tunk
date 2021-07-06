@@ -83,9 +83,9 @@ tag message changes before creating the tag.
 	Disables all policies. When this flag is set, one of the *--major*, *--minor*, or
 	*--patch* flags is required.
 
-*--policy-view* _name_
-	Print some information about the named policy, then exit. Can be specified
-	multiple times.
+*--policy-view*
+	Print some information about the named policies, then exit. Uses whichever
+	policies are configured.
 
 *--release-scope* _scope_
 	Declares a release scope for the project. If commits that include _scope_
