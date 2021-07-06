@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 
 	"github.com/jeffrom/tunk/config"
 	"github.com/jeffrom/tunk/model"

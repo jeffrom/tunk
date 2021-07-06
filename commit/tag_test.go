@@ -3,7 +3,7 @@ package commit
 import (
 	"testing"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 )
 
 var goodVersion = semver.MustParse("1.2.3")

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/blang/semver"
+	"github.com/blang/semver/v4"
 )
 
 var ErrNoTags = errors.New("commit: no release tags found")
