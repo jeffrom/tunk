@@ -182,6 +182,7 @@ Contributions are welcome! If the change you want to make adds or changes functi
 * more built-in policies
 * read configuration from `$XDG_CONFIG_HOME`, and maybe handle multiple files in the override chain
 * shell completion
+* JSON output
 
 ## inspirations
 
