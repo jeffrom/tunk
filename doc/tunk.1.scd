@@ -11,7 +11,7 @@ _tunk_ [-Vhnq]
 	\ \[--major|--minor|--patch]
 	\ \[--check|--check-commit _subject_]
 	\ \[--stats|--stats-all]
-	\ \[--policy|--no-policy]
+	\ \[--policy|--no-policy] [--policy-view]
 	\ \[--allowed-scope] [--allowed-type]
 	\ \[--release-scope]
 	\ \[--scope|--all]
@@ -82,6 +82,10 @@ tag message changes before creating the tag.
 *--no-policy*
 	Disables all policies. When this flag is set, one of the *--major*, *--minor*, or
 	*--patch* flags is required.
+
+*--policy-view* _name_
+	Print some information about the named policy, then exit. Can be specified
+	multiple times.
 
 *--release-scope* _scope_
 	Declares a release scope for the project. If commits that include _scope_

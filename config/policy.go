@@ -1,6 +1,12 @@
 package config
 
-import "regexp"
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"regexp"
+	"strings"
+)
 
 type Policy struct {
 	Name                  string            `json:"name"`
@@ -31,6 +37,36 @@ func (p *Policy) GetBodyAnnotationRE() *regexp.Regexp {
 		p.bodyRE = regexp.MustCompile(p.BodyAnnotationStartRE)
 	}
 	return p.bodyRE
+}
+
+func (p *Policy) TextSummary(w io.Writer) error {
+	bw := bufio.NewWriter(w)
+
+	bw.WriteString(fmt.Sprintf("Name: %s\n", p.Name))
+
+	if p.SubjectRE != "" {
+		bw.WriteString(fmt.Sprintf("Subject regexp: %s\n", p.SubjectRE))
+	}
+	if p.BodyAnnotationStartRE != "" {
+		bw.WriteString(fmt.Sprintf("Body annotation regexp: %s\n", p.BodyAnnotationStartRE))
+	}
+
+	if len(p.BreakingChangeTypes) > 0 {
+		bw.WriteString(fmt.Sprintf("Breaking change body annotations(s): %s\n", strings.Join(p.BreakingChangeTypes, ", ")))
+	}
+
+	if len(p.CommitTypes) > 0 {
+		bw.WriteString("Commit types:\n")
+		for k, v := range p.CommitTypes {
+			bw.WriteString(fmt.Sprintf("  %16s: %16s\n", k, v))
+		}
+	}
+
+	if p.FallbackReleaseType != "" {
+		bw.WriteString(fmt.Sprintf("Fallback release type: %s\n", p.FallbackReleaseType))
+	}
+
+	return bw.Flush()
 }
 
 var builtinPolicies = []Policy{

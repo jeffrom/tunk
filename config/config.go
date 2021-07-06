@@ -106,6 +106,20 @@ func (c Config) GetPolicies() []*Policy {
 	return pols
 }
 
+func (c Config) GetPolicy(name string) *Policy {
+	for _, pol := range c.CustomPolicies {
+		if pol.Name == name {
+			return &pol
+		}
+	}
+	for _, pol := range builtinPolicies {
+		if pol.Name == name {
+			return &pol
+		}
+	}
+	return nil
+}
+
 func (c Config) GetBranches() []string { return c.Branches }
 
 func (c Config) OverridesSet() bool {

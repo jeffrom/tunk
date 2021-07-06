@@ -47,6 +47,7 @@ func run(rawArgs []string) error {
 	var debugConfig string
 	var printConfig bool
 	var printLatest bool
+	var viewPolicy []string
 	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
@@ -68,6 +69,7 @@ func run(rawArgs []string) error {
 	flags.StringArrayVar(&cfg.AllowedTypes, "allowed-type", nil, "declare allowed commit `type`s")
 	flags.StringArrayVar(&cfg.Policies, "policy", []string{"conventional-lax", "lax"}, "declare commit policies by `name`")
 	flags.BoolVarP(&noPolicy, "no-policy", "P", false, "disable all commit policies")
+	flags.StringArrayVar(&viewPolicy, "policy-view", nil, "describe a policy by `name`")
 	flags.StringArrayVar(&checkCommits, "check-commit", nil, "only validate provided commit `body`")
 	flags.BoolVarP(&checkCommitsFromGit, "check", "C", false, "only validate commits since last release")
 	flags.StringVar(&cfg.Name, "name", "", "name the project")
@@ -158,6 +160,22 @@ func run(rawArgs []string) error {
 		return nil
 	}
 	// done setting up config
+
+	if len(viewPolicy) > 0 {
+		for i, name := range viewPolicy {
+			if i > 0 {
+				cfg.Printf("")
+			}
+			if pol := cfg.GetPolicy(name); pol != nil {
+				if err := pol.TextSummary(cfg.Term.Stdout); err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("policy %q not found", name)
+			}
+		}
+		return nil
+	}
 
 	var rc string
 	if len(args) > 0 {

@@ -88,6 +88,12 @@ Tag a release candidate named "myrc":
 $ tunk myrc
 ```
 
+Check pending commits:
+
+```bash
+$ tunk --check  # or -C
+```
+
 ### scopes
 
 Code projects often have multiple release artifacts, and it can be useful to have separate release channels. Scopes provide this by reading it from the commit message. For example, if we had a go project with a main module defined at the git repository root, and another nested somewhere in the directory tree, a release of the sub-module could be executed by running `tunk -s mymodule`. In the default configuration, this would create a tag like `mymodule/v1.2.3`, which is compatible with go mod.
