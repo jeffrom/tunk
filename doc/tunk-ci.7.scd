@@ -1,4 +1,4 @@
-tunk-ci(1)
+tunk-ci(7)
 
 # NAME
 
