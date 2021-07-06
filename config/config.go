@@ -87,14 +87,22 @@ func (c Config) Warning(msg string, args ...interface{}) {
 }
 
 func (c Config) GetPolicies() []*Policy {
-	var pols []*Policy
-	for _, pol := range c.CustomPolicies {
-		if !oneOf(pol.Name, c.Policies) {
-			continue
+	policies := make(map[string]*Policy)
+	for _, name := range c.Policies {
+		if customPol := c.getCustomPolicy(name); customPol != nil {
+			policies[name] = customPol
+		} else if builtinPol := getBuiltinPolicy(name); builtinPol != nil {
+			policies[name] = builtinPol
+		} else {
+			panic(fmt.Sprintf("policy %q was not found", name))
 		}
-		p := pol
-		pols = append(pols, &p)
 	}
+
+	pols := make([]*Policy, len(c.Policies))
+	for i, name := range c.Policies {
+		pols[i] = policies[name]
+	}
+
 	return pols
 }
 
@@ -104,11 +112,11 @@ func (c Config) OverridesSet() bool {
 	return (c.Major || c.Minor || c.Patch)
 }
 
-func oneOf(s string, l []string) bool {
-	for _, cand := range l {
-		if s == cand {
-			return true
+func (c Config) getCustomPolicy(name string) *Policy {
+	for _, pol := range c.CustomPolicies {
+		if pol.Name == name {
+			return &pol
 		}
 	}
-	return false
+	return nil
 }

@@ -16,7 +16,21 @@ import (
 	"github.com/jeffrom/tunk/vcs"
 )
 
-var ErrNoPolicy = errors.New("commit: no policy matched")
+type NoMatchingPolicyError struct {
+	Policies []string
+}
+
+func (e NoMatchingPolicyError) Is(other error) bool {
+	_, ok := other.(NoMatchingPolicyError)
+	return ok
+}
+
+func (e NoMatchingPolicyError) Error() string {
+	if len(e.Policies) == 0 {
+		return "policies were explicitly unset"
+	}
+	return fmt.Sprintf("none of the following policies matched: %v", e.Policies)
+}
 
 type Analyzer struct {
 	cfg config.Config
@@ -224,7 +238,7 @@ func (a *Analyzer) processCommits(latest semver.Version, commits []*model.Commit
 		a.cfg.Debugf("%s (%s) -> %s", commit.ID[:8], commit.Author, commit.Subject)
 		ac, err := a.processCommit(commit, a.cfg.GetPolicies())
 		if err != nil {
-			if errors.Is(err, ErrNoPolicy) && a.cfg.OverridesSet() {
+			if errors.Is(err, NoMatchingPolicyError{}) && a.cfg.OverridesSet() {
 				ac = &AnalyzedCommit{Commit: commit}
 			} else {
 				return nil, err
@@ -343,7 +357,7 @@ func (a *Analyzer) processCommit(commit *model.Commit, policies []*config.Policy
 			return ac, nil
 		}
 	}
-	return nil, ErrNoPolicy
+	return nil, NoMatchingPolicyError{Policies: a.cfg.Policies}
 }
 
 func (a *Analyzer) detectBreakingChange(pol *config.Policy, ac *AnalyzedCommit) (bool, error) {
