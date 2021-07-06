@@ -61,7 +61,7 @@ The format for configuration files is YAML. JSON is also supported.
 
 *allowed_scopes*
 	If defined, causes *tunk --check* to fail if a scope a policy parses a scope
-	not in this list.
+	not in this list. To allow the main scope, use an empty string.
 
 	Default: []
 
