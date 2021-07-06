@@ -1,4 +1,5 @@
-// Package config contains tunk's configuration.
+// Package config contains tunk's configuration, as well as an abstraction for
+// handling standard io.
 package config
 
 import (
