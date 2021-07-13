@@ -49,7 +49,7 @@ cp contrib/git-hook/commit-msg ~/myrepo/.git/hooks/
 
 ## usage
 
-On a git repository with no tags, running `tunk` will print a message that no release tags could be found, and steps for creating one. In the default configuration, the initial tag will look like this: `v0.1.0`. Once a tag has been created, subsequent commits can be automatically tagged.
+On a git repository with no tags, running `tunk` will print a message indicating that no release tags could be found and an example command for creating one. In the default configuration, the initial tag will look like this: `v0.1.0`. Once a tag has been created, subsequent commits' release tags can be managed.
 
 Running `tunk` on a repository with matching tags will open `$EDITOR` (or `$GIT_EDITOR`) with a summary of the commits that comprise the pending release for final edits. Once saved, a tag will be created for the current commit.
 
