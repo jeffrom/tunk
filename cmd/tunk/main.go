@@ -48,7 +48,7 @@ func run(rawArgs []string) error {
 	var printConfig bool
 	var printLatest bool
 	var viewPolicy bool
-	flags := pflag.NewFlagSet("tunk", pflag.ExitOnError)
+	flags := pflag.NewFlagSet("tunk", pflag.ContinueOnError)
 	flags.BoolVarP(&help, "help", "h", false, "show help")
 	flags.BoolVarP(&version, "version", "V", false, "print version and exit")
 	flags.BoolVarP(&cfg.Dryrun, "dry-run", "n", false, "Don't do destructive operations")
