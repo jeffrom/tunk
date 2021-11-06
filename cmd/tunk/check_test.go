@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -100,7 +99,7 @@ func runCheckCommitTest(tc checkCommitModeTestCase) func(t *testing.T) {
 		die(err)
 		defer os.Chdir(currDir)
 
-		tmpDir, err := ioutil.TempDir("", fmt.Sprintf("tunk-%s", name))
+		tmpDir, err := os.MkdirTemp("", fmt.Sprintf("tunk-%s", name))
 		die(err)
 		defer cleanupTempdir(t, tmpDir)
 		die(os.Chdir(tmpDir))
@@ -122,9 +121,9 @@ func runCheckCommitTest(tc checkCommitModeTestCase) func(t *testing.T) {
 
 		tunkYAMLPath := filepath.Join(dir, "tunk.yaml")
 		if _, err := os.Stat(tunkYAMLPath); err == nil {
-			tunkYAML, err := ioutil.ReadFile(tunkYAMLPath)
+			tunkYAML, err := os.ReadFile(tunkYAMLPath)
 			die(err)
-			die(ioutil.WriteFile(filepath.Join(tmpDir, "tunk.yaml"), tunkYAML, 0644))
+			die(os.WriteFile(filepath.Join(tmpDir, "tunk.yaml"), tunkYAML, 0644))
 		}
 
 		call(ctx, t, "git", "init")

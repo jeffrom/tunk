@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,7 +45,7 @@ func TestTunkDefaultMode(t *testing.T) {
 	call(context.Background(), t, gitPath, "--version")
 
 	validRoot := Path("testdata/valid")
-	validDirs, err := ioutil.ReadDir(validRoot)
+	validDirs, err := os.ReadDir(validRoot)
 	die(err)
 
 	for _, dir := range validDirs {
@@ -65,7 +64,7 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 		die(err)
 		defer os.Chdir(currDir)
 
-		tmpDir, err := ioutil.TempDir("", fmt.Sprintf("tunk-%s", name))
+		tmpDir, err := os.MkdirTemp("", fmt.Sprintf("tunk-%s", name))
 		die(err)
 		defer cleanupTempdir(t, tmpDir)
 		die(os.Chdir(tmpDir))
@@ -85,15 +84,15 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 			os.Setenv("PATH", gitDir)
 		}
 
-		tunkYAML, err := ioutil.ReadFile(filepath.Join(tc.dir, "tunk.yaml"))
+		tunkYAML, err := os.ReadFile(filepath.Join(tc.dir, "tunk.yaml"))
 		if err == nil {
-			die(ioutil.WriteFile(filepath.Join(tmpDir, "tunk.yaml"), tunkYAML, 0644))
+			die(os.WriteFile(filepath.Join(tmpDir, "tunk.yaml"), tunkYAML, 0644))
 		}
 		call(ctx, t, "git", "init")
 		call(ctx, t, "git", "config", "--local", "user.email", "tunk-test@example.com")
 		call(ctx, t, "git", "config", "--local", "user.name", "tunk-test")
 
-		testOpData, err := ioutil.ReadFile(filepath.Join(tc.dir, "test.yaml"))
+		testOpData, err := os.ReadFile(filepath.Join(tc.dir, "test.yaml"))
 		die(err)
 		testopParts := bytes.Split(testOpData, []byte("---\n"))
 		var testops []*testOperation
@@ -118,12 +117,12 @@ func runDefaultModeTest(tc defaultModeTestCase) func(t *testing.T) {
 		goldenPath := filepath.Join(tc.dir, "expect")
 		if env := goldenEnv; env != "" {
 			t.Logf("Writing golden file at %s", goldenPath)
-			die(ioutil.WriteFile(goldenPath, logOut, 0644))
+			die(os.WriteFile(goldenPath, logOut, 0644))
 			return
 		}
 
 		// compare goldenfile to output
-		expectb, err := ioutil.ReadFile(goldenPath)
+		expectb, err := os.ReadFile(goldenPath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				t.Fatalf("No goldenfile at %s. Create one by rerunning with GOLDEN=1", goldenPath)
@@ -280,10 +279,10 @@ func cleanupTempdir(t testing.TB, p string) {
 
 func logDiff(t testing.TB, expect, got []byte) {
 	t.Helper()
-	expectf, err := ioutil.TempFile("", "tunk-diff")
+	expectf, err := os.CreateTemp("", "tunk-diff")
 	die(err)
 	defer expectf.Close()
-	gotf, err := ioutil.TempFile("", "tunk-diff")
+	gotf, err := os.CreateTemp("", "tunk-diff")
 	die(err)
 	defer expectf.Close()
 

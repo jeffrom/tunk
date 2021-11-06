@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -225,7 +224,7 @@ func (g *Git) CreateTag(ctx context.Context, commit, tag string, opts vcs.TagOpt
 		}
 	}
 
-	tmpfile, err := ioutil.TempFile("", "tunk-shortlog")
+	tmpfile, err := os.CreateTemp("", "tunk-shortlog")
 	if err != nil {
 		return err
 	}
@@ -374,7 +373,7 @@ func noop() {}
 
 func SetupCreds() (string, func(), error) {
 	token := getenv("GIT_TOKEN", "GITHUB_TOKEN", "GH_TOKEN")
-	f, err := ioutil.TempFile("", "tunk")
+	f, err := os.CreateTemp("", "tunk")
 	if err != nil {
 		return "", noop, err
 	}

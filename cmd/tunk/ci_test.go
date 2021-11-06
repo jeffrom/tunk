@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http/httptest"
 	"os"
@@ -113,7 +112,7 @@ func TestTunkCIMode(t *testing.T) {
 func runCITest(tc ciModeTestCase) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
-		repoPath, err := ioutil.TempDir("", "tunk-repo")
+		repoPath, err := os.MkdirTemp("", "tunk-repo")
 		die(err)
 		t.Logf("Clone dir: %s", repoPath)
 		defer cleanupTempdir(t, repoPath)
@@ -143,7 +142,7 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 		die(os.Chdir(srvRepoDir))
 		call(ctx, t, "git", "init", "--bare", ".")
 
-		srvRepoCloneDir, err := ioutil.TempDir("", "tunk-repo")
+		srvRepoCloneDir, err := os.MkdirTemp("", "tunk-repo")
 		die(err)
 		die(os.Chdir(srvRepoCloneDir))
 		call(ctx, t, "git", "clone", srvRepoDir, ".")
@@ -177,12 +176,12 @@ func runCITest(tc ciModeTestCase) func(t *testing.T) {
 			t.Logf("Writing golden file at %s", goldenPath)
 			dir, _ := filepath.Split(filepath.Clean(goldenPath))
 			die(os.MkdirAll(dir, 0755))
-			die(ioutil.WriteFile(goldenPath, logOut, 0644))
+			die(os.WriteFile(goldenPath, logOut, 0644))
 			return
 		}
 
 		// compare goldenfile to output
-		expectb, err := ioutil.ReadFile(goldenPath)
+		expectb, err := os.ReadFile(goldenPath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				t.Fatalf("No goldenfile at %s. Create one by rerunning with GOLDEN=1", goldenPath)
@@ -205,7 +204,7 @@ type gitServer struct {
 }
 
 func newGitServer(passwd string, cfg *gitkit.Config) *gitServer {
-	dir, err := ioutil.TempDir("", "tunk-test")
+	dir, err := os.MkdirTemp("", "tunk-test")
 	if err != nil {
 		panic(err)
 	}

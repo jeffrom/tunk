@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -148,7 +147,7 @@ func run(rawArgs []string) error {
 		if debugConfig == "-" {
 			cfg.Printf("%s", b)
 		} else {
-			if err := ioutil.WriteFile(debugConfig, b, 0644); err != nil {
+			if err := os.WriteFile(debugConfig, b, 0644); err != nil {
 				return err
 			}
 		}
@@ -335,7 +334,7 @@ $ tunk --check
 
 func readTunkYAML(p string) (*config.Config, error) {
 	if p != "" {
-		b, err := ioutil.ReadFile(p)
+		b, err := os.ReadFile(p)
 		if err != nil {
 			return nil, err
 		}
@@ -353,7 +352,7 @@ func readTunkYAML(p string) (*config.Config, error) {
 
 	for {
 		candPath := filepath.Join(wd, "tunk.yaml")
-		b, err := ioutil.ReadFile(candPath)
+		b, err := os.ReadFile(candPath)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				wd, _ = filepath.Split(filepath.Clean(wd))

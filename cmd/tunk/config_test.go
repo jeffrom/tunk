@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -114,7 +113,7 @@ func TestLoadConfig(t *testing.T) {
 		},
 	}
 
-	dir, err := ioutil.TempDir("", "tunk-config-test")
+	dir, err := os.MkdirTemp("", "tunk-config-test")
 	if err != nil {
 		return
 	}
@@ -137,7 +136,7 @@ func TestLoadConfig(t *testing.T) {
 
 			testArgs := []string{"tunk", "--debug-config", cfgPath}
 			if tc.tunkYAML != "" {
-				if err := ioutil.WriteFile(tunkYAMLSourcePath, []byte(tc.tunkYAML), 0644); err != nil {
+				if err := os.WriteFile(tunkYAMLSourcePath, []byte(tc.tunkYAML), 0644); err != nil {
 					t.Fatal(err)
 				}
 				testArgs = append(testArgs, "-c", tunkYAMLSourcePath)
@@ -153,7 +152,7 @@ func TestLoadConfig(t *testing.T) {
 				return
 			}
 
-			cfgRaw, err := ioutil.ReadFile(cfgPath)
+			cfgRaw, err := os.ReadFile(cfgPath)
 			if err != nil {
 				t.Fatal(err)
 			}
