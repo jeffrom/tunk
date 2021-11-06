@@ -6,11 +6,7 @@ There are several similar (and great) tools that serve a similar purpose, such a
 
 ## status
 
-😬 *not super stable* 😬
-
-tunk is pretty stable, but also has bugs, and I may introduce some breaking
-changes until tunk reaches `v1.0.0`. After that, breaking changes are very
-unlikely.
+tunk is pretty stable, but also has edge cases still to work out, and I may introduce some breaking changes until tunk reaches `v1.0.0`.
 
 ## install
 
