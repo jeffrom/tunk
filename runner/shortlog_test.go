@@ -75,9 +75,9 @@ func TestShortlogScope(t *testing.T) {
 
 	b := &bytes.Buffer{}
 
-	ver := &*defaultTestVer
+	ver := *defaultTestVer
 	ver.Scope = "cool"
-	if err := rnr.shortlog(context.Background(), b, ver, "test"); err != nil {
+	if err := rnr.shortlog(context.Background(), b, &ver, "test"); err != nil {
 		t.Fatal(err)
 	}
 
