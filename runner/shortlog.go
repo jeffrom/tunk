@@ -11,7 +11,7 @@ import (
 const defaultShortlogTemplate = `{{ or .Version.Scope .Name "release" }}: v{{ .Version.Version }}
 
 This release contains the following commits:
-{{ range $commit := .Version.AllCommits }}
+{{ range $commit := .Version.ScopedCommits }}
 * {{ $commit.Subject }} ({{ $commit.ShortID }})
 {{ end }}
 {{ messageInfo }}

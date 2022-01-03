@@ -49,3 +49,15 @@ func (v *Version) ShortCommit() string {
 	}
 	return v.Commit
 }
+
+func (v *Version) ScopedCommits() []*AnalyzedCommit {
+	scope := v.Scope
+	var acs []*AnalyzedCommit
+	for _, ac := range v.AllCommits {
+		if ac.Scope != scope {
+			continue
+		}
+		acs = append(acs, ac)
+	}
+	return acs
+}
