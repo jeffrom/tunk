@@ -22,7 +22,7 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: cache
       uses: actions/cache@v2
       with:
@@ -50,7 +50,7 @@ jobs:
       with:
         go-version: 1.17.x
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: cache
       uses: actions/cache@v2
       with:
@@ -87,7 +87,7 @@ jobs:
       with:
         python-version: 3.x
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: cache
       uses: actions/cache@v2
       with:
