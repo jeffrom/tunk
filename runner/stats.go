@@ -7,7 +7,9 @@ import (
 	"io"
 	"regexp"
 	"sort"
-	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Stats struct {
@@ -138,5 +140,6 @@ var nonAlphaRE = regexp.MustCompile(`[^A-Za-z]`)
 
 func toTitle(s string) string {
 	s = nonAlphaRE.ReplaceAllLiteralString(s, " ")
-	return strings.Title(s)
+	caser := cases.Title(language.Und, cases.NoLower)
+	return caser.String(s)
 }
