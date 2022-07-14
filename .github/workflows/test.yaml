@@ -71,7 +71,7 @@ jobs:
     - name: Install tools
       run: |
         go version
-        go install honnef.co/go/tools/cmd/staticcheck@2020.2.4
+        go install honnef.co/go/tools/cmd/staticcheck@2022.1.2
 
     - name: Run go vet
       run: go vet ./...
@@ -94,6 +94,6 @@ jobs:
         path: ~/.cache/pip
         key: ${{ runner.os }}-python
     - name: Install semgrep
-      run: python3 -m pip install semgrep
+      run: python3 -m pip install semgrep==0.104.0
     - name: Run semgrep
       run: semgrep --error -c r/dgryski.semgrep-go -c p/gosec -c p/golang
