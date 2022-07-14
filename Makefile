@@ -134,7 +134,7 @@ $(gocoverutil):
 	GO111MODULE=off go get github.com/AlekSi/gocoverutil
 
 $(staticcheck):
-	cd $(TMPDIR) && GO111MODULE=on go get honnef.co/go/tools/cmd/staticcheck@2019.2.3
+	cd $(TMPDIR) && GO111MODULE=on go get honnef.co/go/tools/cmd/staticcheck@2022.1.2
 
 $(gomodoutdated):
 	GO111MODULE=off go get github.com/psampaz/go-mod-outdated
