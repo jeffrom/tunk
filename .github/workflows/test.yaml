@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install Python
-      uses: actions/setup-python@v4.1.0
+      uses: actions/setup-python@v4.3.0
       with:
         python-version: 3.x
     - name: Checkout code
