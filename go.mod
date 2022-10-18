@@ -9,12 +9,12 @@ require (
 	github.com/mattn/go-isatty v0.0.14
 	github.com/sosedoff/gitkit v0.3.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/text v0.3.7
+	golang.org/x/text v0.4.0
 )
 
 require (
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
